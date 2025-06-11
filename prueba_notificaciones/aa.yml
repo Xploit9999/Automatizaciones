@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+
+  - block:
+
+    - fail:
+        msg: "Esto es una prueba"
+
+    rescue:
+
+    - set_stats:
+        data:
+          error: "{{ ansible_failed_result.msg }}"
+...
