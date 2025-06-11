@@ -13,7 +13,7 @@
 
     - set_stats:
         data:
-          mensaje_error: "{{ ansible_failed_result.msg }}"
+          job_description: "{{ ansible_failed_result.msg }}"
 
     - fail:
         msg: "lol"
