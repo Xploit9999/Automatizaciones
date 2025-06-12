@@ -1,0 +1,16 @@
+FROM ubi9-minimal:latest
+MAINTAINER Xploit999 <jhon.piedrahita@outlook.com>
+LABEL Prueba para pod
+ADD grafana.repo /etc/yum.repos.d/grafana.repo
+RUN microdnf install -y wget && \
+    wget -q -O gpg.key https://rpm.grafana.com/gpg.key && \
+    rpm --import gpg.key && \
+    microdnf install -y grafana 
+EXPOSE 3000
+ENV GF_PATHS_HOME=/usr/share/grafana
+ENV GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+ENV GF_PATHS_DATA=/var/lib/grafana
+ENV GF_PATHS_LOGS=/var/log/grafana
+ENV GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+ENV GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+CMD ["/sbin/grafana-server"]
