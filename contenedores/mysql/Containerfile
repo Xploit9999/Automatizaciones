@@ -1,0 +1,10 @@
+FROM ubi9-minimal:latest
+MAINTAINER xploit999 <jhon.piedrahita@outlook.com>
+COPY config.sh /usr/local/bin/
+COPY mariadb.repo /etc/yum.repos.d/mariadb.repo
+RUN rpm --import https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY && \
+    microdnf update && \
+    microdnf install -y mariadb-server 
+EXPOSE 3306
+ENTRYPOINT ["config.sh"]
+CMD ["mysqld", "--user=mysql"]
