@@ -1,16 +1,23 @@
 FROM ubi9-minimal:latest
 MAINTAINER Xploit999 <jhon.piedrahita@outlook.com>
-LABEL Prueba para pod
+LABEL \
+    org.opencontainers.image.title="grafana-test" \
+    org.opencontainers.image.description="Contenedor para pruebas sobre grafana" \
+    org.opencontainers.image.version="1.0.0" \
+    org.opencontainers.image.authors="Xploit9999" \
+    env="Laboratorio" 
 ADD grafana.repo /etc/yum.repos.d/grafana.repo
 RUN microdnf install -y wget && \
     wget -q -O gpg.key https://rpm.grafana.com/gpg.key && \
     rpm --import gpg.key && \
     microdnf install -y grafana 
 EXPOSE 3000
-ENV GF_PATHS_HOME=/usr/share/grafana
-ENV GF_PATHS_CONFIG=/etc/grafana/grafana.ini
-ENV GF_PATHS_DATA=/var/lib/grafana
-ENV GF_PATHS_LOGS=/var/log/grafana
-ENV GF_PATHS_PLUGINS=/var/lib/grafana/plugins
-ENV GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-CMD ["/sbin/grafana-server"]
+VOLUME /var/lib/grafana/plugins
+USER grafana
+ENV GF_PATHS_HOME=/usr/share/grafana \
+    GF_PATHS_CONFIG=/etc/grafana/grafana.ini \
+    GF_PATHS_DATA=/var/lib/grafana \
+    GF_PATHS_LOGS=/var/log/grafana \
+    GF_PATHS_PLUGINS=/var/lib/grafana/plugins \
+    GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+CMD ["/sbin/grafana-server", "--homepath", "${GF_PATHS_HOME}"]
