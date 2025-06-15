@@ -1,10 +1,19 @@
 FROM ubi9-minimal:latest
 MAINTAINER xploit999 <jhon.piedrahita@outlook.com>
+LABEL \
+    org.opencontainers.image.title="mariadb-test" \
+    org.opencontainers.image.description="Contenedor para pruebas sobre mariadb" \
+    org.opencontainers.image.version="1.0.0" \
+    org.opencontainers.image.authors="Xploit9999" \
+    env="Laboratorio" \
+    usage="podman run -d -p <lport>:3306 -e 'root_pass=<contraseña> xploit9999/mariadb-test" \
+    usage.instructions="Ejecuta el contenedor con -e root_pass=<tu_contraseña> para definir la clave de root; si no, se usará 'default123' por defecto"
 COPY config.sh /usr/local/bin/
 COPY mariadb.repo /etc/yum.repos.d/mariadb.repo
 RUN rpm --import https://supplychain.mariadb.com/MariaDB-Server-GPG-KEY && \
     microdnf update && \
     microdnf install -y mariadb-server 
 EXPOSE 3306
+VOLUME /var/lib/mysql
 ENTRYPOINT ["config.sh"]
-CMD ["mysqld", "--user=mysql"]
+CMD ["mysqld", "--user=mysql", "--skip-name-resolve"]
