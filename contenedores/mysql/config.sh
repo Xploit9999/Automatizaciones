@@ -4,7 +4,7 @@ function configuracion(){
 
     mysqld_safe --datadir="${DATA_DIR}" &
     sleep 5
-    mariadb -u root <<-!
+    mariadb -u root -p${MYSQL_ROOT_PASSWORD} <<-!
       ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
       CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
       GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
