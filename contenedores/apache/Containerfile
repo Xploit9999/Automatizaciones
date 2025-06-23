@@ -1,0 +1,23 @@
+FROM ubi9-minimal:latest
+MAINTAINER Xploit999 <jhon.piedrahita@outlook.com>
+LABEL \
+    org.opencontainers.image.title="apache-test" \
+    org.opencontainers.image.description="Contenedor apache de pruebas" \ 
+    org.opencontainer.image.version="1.0.0" \
+    org.opencontainers.image.authors="Xploit9999" \
+    env="Laboratorio"
+RUN microdnf install -y httpd
+COPY files/httpd.conf /etc/httpd/conf/httpd.conf
+EXPOSE 80
+ENV \
+    HTTPD_APP_ROOT=${APP_ROOT} \
+    HTTPD_CONFIGURATION_PATH=${APP_ROOT}/etc/httpd.d \
+    HTTPD_MAIN_CONF_PATH=/etc/httpd/conf \
+    HTTPD_MAIN_CONF_MODULES_D_PATH=/etc/httpd/conf.modules.d \
+    HTTPD_MAIN_CONF_D_PATH=/etc/httpd/conf.d \
+    HTTPD_VAR_RUN=/var/run/httpd \
+    HTTPD_DATA_PATH=/var/www \
+    HTTPD_DATA_ORIG_PATH=/var/www \
+    HTTPD_LOG_PATH=/var/log/httpd
+VOLUME /var/www/html
+CMD ["/sbin/httpd", "-DFOREGROUND"]
