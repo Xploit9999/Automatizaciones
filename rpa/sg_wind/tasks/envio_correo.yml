@@ -8,5 +8,7 @@
     to: "{{ destinatario }}"
     subject: "{{ asunto }}"
     body: "{{ mensaje }}"
+    subtype: html
+    charset: utf8
 #    attach: "{{ adjuntos if adjuntos is defined else '' }}"
 ...
