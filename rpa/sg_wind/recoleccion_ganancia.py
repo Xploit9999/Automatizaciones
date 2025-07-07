@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -41,9 +41,11 @@ def iniciar_proceso():
             global args 
             global driver
             args = Options()
-            args.add_argument("--headless=new")
-            #driver = webdriver.Chrome(options=args)
-            driver = webdriver.Chrome()
+            args.add_argument("--headless")
+            args.add_argument("--no-sandbox")
+            args.add_argument("--disable-dev-shm-usage")
+            driver = webdriver.Chrome(options=args)
+            #driver = webdriver.Chrome()
             driver.get('https://sg-wind.com/#/login'); sleep(5)
             
             if len(sys.argv[1]) == 10:
