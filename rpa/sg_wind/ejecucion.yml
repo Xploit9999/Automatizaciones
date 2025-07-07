@@ -1,0 +1,29 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/secrets.yml
+  tasks:
+
+  - name: Sg Energy | Ejecuta RPA para obtener ganancia
+    script: recoleccion_ganancia.py
+    register: resultado
+    notify: "Envia correo"
+
+  handlers:
+
+  - name: Sg Energy | Informa por correo la ejecucion
+    import_tasks: tasks/envio_correo.yml
+    vars:
+      asunto: SG-Energy Farm
+      destinatario: test@gmail.com 
+      mensaje: >-
+            Cordial saludo
+            
+            Este es el resultado de la recolección del dinero:
+
+            {{ resultado.stdout }}
+            
+            Atentamente,
+            Ansible Automation
+...

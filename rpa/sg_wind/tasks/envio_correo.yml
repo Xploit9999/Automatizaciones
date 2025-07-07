@@ -1,0 +1,12 @@
+---
+- name: Envia correo
+  mail:
+    host: "{{ servidor_correo }}" 
+    port: "{{ puerto }}"
+    username: "{{ correo_gmail }}"
+    password: "{{ password_gmail }}"
+    to: "{{ destinatario }}"
+    subject: "{{ asunto }}"
+    body: "{{ mensaje }}"
+#    attach: "{{ adjuntos if adjuntos is defined else '' }}"
+...
