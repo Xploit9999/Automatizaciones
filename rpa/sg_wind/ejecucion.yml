@@ -18,7 +18,7 @@
     vars:
       asunto: >-
         {{ '🔔 SG-Energy Recolección Realizada -' ~ fecha_ejecucion 
-        if 'Se ha recolectado la ganancia diaria.' in resultado.stdout else '🚨 SG-Energy No hay recolección disponible -' ~ fecha_ejecucion }}
+        if 'Se ha recolectado la ganancia diaria.' in resultado.stdout else '⚠️ SG-Energy No hay recolección disponible -' ~ fecha_ejecucion }}
       destinatario: "{{ correo_a }}"
       mensaje: "{{ lookup('template', 'templates/correo.html.j2') }}"
       fecha_ejecucion: >-
