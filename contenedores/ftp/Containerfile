@@ -1,0 +1,17 @@
+FROM docker.io/almalinux/9-base
+MAINTAINER Xploit9999 <jhon.piedrahita@outlook.com>
+LABEL \
+  org.opencontainers.image.title="ftp-test" \
+  org.opencontainers.image.description="ftp para entorno de desarrollo" \
+  org.opencontainers.image.version="1.0.0" \
+  org.opencontainers.image.authors="Xploit9999" \
+  env="Laboratorio" \
+  usage="podman run -d -p <lport>:20 -p <lport>:21 -e 'FTP_USER=<usuario>' -e 'FTP_PASS=<password>' --name ftp-server ftp-test"
+ENV FTP_USER=test \
+    FTP_PASS=test123
+COPY vsftpd.conf /etc/vsftpd/ 
+COPY config.sh /usr/local/bin/ 
+RUN yum install -y vsftpd && yum clean all && chmod +x /usr/local/bin/config.sh
+EXPOSE 20 21
+ENTRYPOINT ["config.sh"]
+CMD ["vsftpd", "/etc/vsftpd/vsftpd.conf"]
