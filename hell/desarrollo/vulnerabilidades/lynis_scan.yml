@@ -8,7 +8,7 @@
   pre_tasks:
 
   - name: Lynis Scan Vul | Valida version de Python en el/os servidor(es) remoto(s)
-    include_tasks: /home/yagami/Documents/git_proyectos/comprobar_python/comprobar_python.yml
+    include_tasks: tasks/comprobar_python.yml
 
   - set_fact:
       ansible_python_interpreter: "/usr/bin/python"
