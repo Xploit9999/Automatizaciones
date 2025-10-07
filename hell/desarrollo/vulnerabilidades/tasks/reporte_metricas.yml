@@ -55,7 +55,7 @@
       state: import
 
   - name: Lynis Scan Vul | Convierte reporte a formato HTML
-    shell: python /ansible/vulnerabilidades/files/convertHTML.py {{ reporte }}
+    shell: python {{ ansible_playbook_dir }}/files/convertHTML.py {{ reporte }}
 
   - file:
       path: "{{ reporte }}"

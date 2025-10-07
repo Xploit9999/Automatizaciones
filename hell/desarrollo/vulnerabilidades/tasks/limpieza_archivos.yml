@@ -25,7 +25,7 @@
     mysql_query:
       login_user: root
       login_password: 'Nuevo01'
-      login_db: testing
+      login_db: vulnerabilidades
       query:
         - DELETE FROM vulnerabilidades;
 

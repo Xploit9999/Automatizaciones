@@ -1,0 +1,48 @@
+---
+- name: Python version | 1. Valida version del interprete de Python actual
+  raw: |
+    if [[ -x /usr/bin/python ]]; then
+      python -V 2>&1 | awk '{print $2}'
+    else
+      python3 -V 2>&1 | awk '{print $2}'
+    fi
+  register: version_actual
+
+- name:  Python version | 2.- Obtener version python
+  set_fact:
+    python_version_actual:  "{{ version_actual.stdout | regex_search('[2-9].[1-9][.1-9\\s]*', multiline=True)  | replace('\r','') | replace('\n','') | regex_replace('[^0-9.]','') | trim }}"
+
+- name: Python version | 3. Bloque si la version actual de Python en inferior a 2.6.9
+  block:
+
+  - name: Python version | 3.1 Encuentra versiones de python en el servidor
+    raw: find /usr -type f -perm 0755 -name 'python*' 2>/dev/null | egrep 'python[23]\.[0-9]+$'
+    register: python
+
+  - name: Python version | 3.2 Remueve ruta absoluta y organiza de mayor a menor la version, deja solo la primera coincidencia
+    set_fact:
+      python_version: "{{ python.stdout_lines | map('regex_replace', '.python([0-9]+\\.[0-9]+).', '\\1') | list | sort | reverse | first }}"
+
+  - name: Python version | 3.3 Selecciona la version mas alta de Python que se encontro en el servidor con la ruta absoluta
+    set_fact:
+      #select_version: "{{ python.stdout | select('match', '*python' + python_version) }}" 
+      select_version: "{{ python.stdout | regex_search( '[/a-z]python[1-9.]' + python_version , multiline=True) | replace('\r','') | replace('\n','') }}" 
+
+  - name: Python version | 3.4 Setea variable de ansible para que reconozca el interprete de Python mas actual en el servidor
+    set_fact:
+      ansible_python_interpreter: "{{ select_version | join }}"
+      python_version_actual: "{{ python_version }}"
+
+  when: python_version_actual !="" and python_version_actual < "2.6.9"
+      
+- name: Python version | 4. Valida si es necesario usar el modulo de raw, en caso de que el interprete sea inferior a 2.6.9
+  set_fact:
+    usar_raw: "{{ true if (  python_version_actual =='' or python_version_actual < '2.6.9' ) else false | bool }}"
+
+- name:   Python version | 5. Mostrar version actual de python
+  debug:
+    var: python_version_actual
+
+- name:   Python version | 7.- Mostrar si usa raw
+  debug:
+    var: usar_raw
