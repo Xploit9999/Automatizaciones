@@ -14,7 +14,6 @@
   - file:
       path: "{{ item }}"
       state: directory
-      owner: yagami
     loop:
       - "/tmp/queries/"
       - "/tmp/reportes/"
