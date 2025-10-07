@@ -1,0 +1,16 @@
+---
+- name: Verificar servicio NTP
+  service:
+    name: ntp
+    state: started
+    enabled: yes
+  check_mode: yes
+  register: ntp_service
+
+- name: Verificar servidores NTP
+  lineinfile:
+    path: /etc/ntp.conf
+    regexp: "^server"
+    line: "server pool.ntp.org"
+  check_mode: yes
+  register: ntp_config

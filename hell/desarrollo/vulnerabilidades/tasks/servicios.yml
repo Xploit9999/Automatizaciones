@@ -1,0 +1,13 @@
+---
+- name: Revisar servicios inseguros activos
+  ansible.builtin.service_facts:
+
+- name: Alertar si hay servicios inseguros corriendo
+  debug:
+    msg: "¡Alerta! Servicios inseguros detectados en ejecución: {{ item }}. Se recomienda deshabilitarlos si no son necesarios."
+  loop:
+    - telnet
+    - rsh
+    - rlogin
+    - rexec
+  when: ansible_facts.services[item + '.service'] is defined and ansible_facts.services[item + '.service'].state == 'running'

@@ -1,0 +1,35 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+  gather_facts: false
+  pre_tasks:
+
+  - package:
+      name: mariadb-server
+      state: present
+    notify: "Iniciar servicio de mariadb"
+
+  - meta: flush_handlers
+
+  - pip:
+      name: pymysql
+
+  - shell: mysqladmin -u root password "Nuevo01"
+
+  - mysql_query:
+      login_user: root
+      login_password: 'Nuevo01'
+      query:
+        - CREATE DATABASE IF NOT EXISTS vulnerabilidades
+        - CREATE USER IF NOT EXISTS 'ansible'@'%' IDENTIFIED BY 'Trash01.*'
+        - GRANT ALL PRIVILEGES ON vulnerabilidades.* TO 'ansible'@'%'
+        - FLUSH PRIVILEGES
+
+  handlers:
+
+  - systemd:
+      name: mariadb
+      state: started
+    listen: "Iniciar servicio de mariadb"
+...

@@ -1,0 +1,66 @@
+- block:
+
+  - name: Lynis Scan Vul | Leer el reporte de Lynis
+    slurp:
+      src: "{{ reporte }}"
+    register: contenido 
+
+  - name: Lynis Scan Vul | Extraer líneas de sugerencias
+    set_fact:
+      suggestions: "{{ reporte.split('\n') | select('search', 'suggestion') | list }}"
+    vars:
+      reporte: "{{ contenido.content | b64decode }}"
+
+  - name: Lynis Scan Vul | Clasificar y agrupar sugerencias por tipo de tag
+    set_fact:
+      metricas: "{{ metricas | combine({
+        categorias_tags.get(etiqueta.split('-')[0], 'Otros'): (metricas.get(categorias_tags.get(etiqueta.split('-')[0], 'Otros'), 0) + 1)
+      }) }}"
+    loop: "{{ suggestions }}"
+    vars:
+      etiqueta: "{{ item.split('|')[0] | regex_search('([A-Z]+)-') }}"
+      metricas: {}
+
+  - name: Lynis Scan Vul | Mostrar métricas agrupadas
+    debug:
+      var: metricas
+
+  - name: Lynis Scan Vul | Modela query de inserción
+    set_fact:
+      queries: >
+        {% set inserts = [] %}
+        {%- for categoria, cantidad in metricas.items() -%}
+          {% set _ =  inserts.append('INSERT INTO vulnerabilidades VALUES(' 
+                                    + quote + inventory_hostname + quote + ',' 
+                                    + quote + categoria + quote + ',' 
+                                    + cantidad|string + ',' 
+                                    + quote + ansible_os_family + quote + ');\n') %}
+        {%- endfor -%}
+        {{ inserts }}
+    vars:
+      quote: "'"
+
+  - name: Lynis Scan Vul | Genera archivo de query
+    lineinfile:
+      path: /tmp/queries/{{ inventory_hostname }}_vul.sql
+      line: "{{ queries | join }}"
+      create: true
+
+  - name: Lynis Scan Vul | Registra data a la base de datos.
+    mysql_db:
+      login_user: root
+      login_password: Nuevo01
+      name: testing
+      target: /tmp/queries/{{ inventory_hostname }}_vul.sql
+      state: import
+
+  - name: Lynis Scan Vul | Convierte reporte a formato HTML
+    shell: python /ansible/vulnerabilidades/files/convertHTML.py {{ reporte }}
+
+  - file:
+      path: "{{ reporte }}"
+      state: absent
+
+  delegate_to: localhost
+  connection: local
+...

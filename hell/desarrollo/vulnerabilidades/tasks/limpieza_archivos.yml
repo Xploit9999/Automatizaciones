@@ -1,0 +1,35 @@
+---
+- block:
+
+  #- name: Lynis Scan Vul | Limpiar reportes y queries antiguos.
+  - name: Openscap Scan | Limpiar reportes y queries antiguos.
+    file:
+      path: "{{ item }}"
+      state: absent
+    loop:
+      - "/tmp/queries/"
+      - "/tmp/reportes/"
+      - "/var/www/html/reportes/"
+
+  - file:
+      path: "{{ item }}"
+      state: directory
+      owner: yagami
+    loop:
+      - "/tmp/queries/"
+      - "/tmp/reportes/"
+      - "/var/www/html/reportes/"
+
+  - name: Openscap Scan | Se limpian registros de la base de datos.
+  #- name: Lynis Scan Vul | Se limpian registros de la base de datos.
+    mysql_query:
+      login_user: root
+      login_password: 'Nuevo01'
+      login_db: testing
+      query:
+        - DELETE FROM vulnerabilidades;
+
+  delegate_to: localhost
+  connection: local
+  run_once: true
+...

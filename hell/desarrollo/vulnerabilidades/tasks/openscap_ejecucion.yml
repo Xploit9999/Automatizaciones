@@ -1,0 +1,22 @@
+---
+- name: Openscap Scan | Se recolecta fact de sistema operativo.
+  setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - os_family
+
+- name: Openscap Scan | Ejecuta escaneo
+  shell: oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_cis --report /tmp/{{ inventory_hostname }}_oscap_report.html --results /tmp/{{ inventory_hostname }}_oscap_report.xml /usr/share/xml/scap/ssg/content/ssg-almalinux9-ds.xml >/dev/null 2>&1
+  register: resultado
+  failed_when: resultado.rc > 2
+
+- name: Openscap Scan | Recolecta reporte
+  fetch:
+    src: "{{ item.origen }}"
+    dest: "{{ item.destino }}"
+    flat: true
+  loop:
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html" }
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.xml", destino: "/tmp/reportes/{{ inventory_hostname }}_oscap_report.xml" }
+...

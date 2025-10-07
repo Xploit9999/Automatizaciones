@@ -1,0 +1,14 @@
+---
+- name: Verificar configuración de SELinux/AppArmor
+  block:
+    - name: Verificar estado de SELinux
+      command: sestatus
+      register: selinux_status
+      ignore_errors: yes
+
+    - name: Verificar estado de AppArmor
+      command: aa-status
+      register: apparmor_status
+      ignore_errors: yes
+  when: ansible_os_family == "RedHat" or ansible_os_family == "Debian"
+...

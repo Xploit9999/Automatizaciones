@@ -1,0 +1,10 @@
+---
+- name: Verificar existencia de actualizaciones
+  ansible.builtin.command: "yum check-update || apt list --upgradable"
+  register: updates_available
+  changed_when: false
+
+- name: Alertar si hay actualizaciones pendientes
+  debug:
+    msg: "Se encontraron actualizaciones pendientes: {{ updates_available.stdout_lines }}. No aplicar actualizaciones puede dejar el sistema vulnerable a exploits conocidos."
+  when: updates_available.stdout_lines | length > 0

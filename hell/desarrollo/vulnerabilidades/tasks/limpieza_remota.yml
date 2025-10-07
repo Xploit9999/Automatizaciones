@@ -1,0 +1,9 @@
+---
+- name: Lynis Scan Vul | Se limpian archivos asociados a este proceso y el reporte generado.
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/tmp/{{ inventory_hostname }}_report.dat"
+    - '/tmp/lynis-{{ tag }}'
+...

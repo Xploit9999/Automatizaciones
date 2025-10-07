@@ -1,0 +1,19 @@
+---
+- name: Verificar configuración de SSH
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regex: "{{ item.regex }}"
+    state: present
+  loop:
+    - { regex: '^PermitRootLogin', line: 'PermitRootLogin no' }
+    - { regex: '^PasswordAuthentication', line: 'PasswordAuthentication no' }
+    - { regex: '^Protocol', line: 'Protocol 2' }
+    - { regex: '^X11Forwarding', line: 'X11Forwarding no' }
+    - { regex: '^AllowTcpForwarding', line: 'AllowTcpForwarding no' }
+  check_mode: true
+  register: ssh_config
+
+- name: Alertar si SSH tiene configuraciones inseguras
+  debug:
+    msg: "Configuraciones inseguras detectadas en SSH. Permitir root login o autenticación por contraseña aumenta el riesgo de ataques de fuerza bruta."
+  when: ssh_config.changed

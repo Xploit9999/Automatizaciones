@@ -1,0 +1,61 @@
+---
+- name: Instalar y configurar OpenSCAP en el servidor central
+  hosts: all  # Ejecuta en el servidor central
+  become: true       # Ejecuta con privilegios de superusuario
+  tasks:
+
+  - name: Actualizar la lista de paquetes (Debian/Ubuntu)
+    apt:
+      update_cache: yes
+    when: ansible_os_family == "Debian"
+
+  - name: Instalar OpenSCAP (Debian/Ubuntu)
+    apt:
+      name:
+        - openscap-scanner
+        - scap-security-guide
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Actualizar la lista de paquetes (RedHat/CentOS)
+    yum:
+      update_cache: yes
+    when: ansible_os_family == "RedHat"
+
+  - name: Instalar OpenSCAP (RedHat/CentOS)
+    yum:
+      name:
+        - openscap-scanner
+        - scap-security-guide
+      state: present
+    when: ansible_os_family == "RedHat"
+
+  - name: Verificar la instalación de OpenSCAP
+    command: oscap --version
+    register: oscap_version
+
+  - name: Mostrar la versión de OpenSCAP instalada
+    debug:
+      msg: "OpenSCAP versión {{ oscap_version.stdout }}"
+
+  - name: Crear directorio para almacenar reportes
+    file:
+      path: /tmp/reports
+      state: directory
+      mode: '0755'
+
+  - name: Copiar contenido SCAP (opcional, si no está incluido en el paquete)
+    copy:
+      src: /usr/share/xml/scap/ssg/content/
+      dest: /usr/share/xml/scap/ssg/content/
+      remote_src: yes
+    when: ansible_os_family == "RedHat"
+
+  - name: Verificar contenido SCAP
+    command: oscap info /usr/share/xml/scap/ssg/content/ssg-{{ ansible_distribution | lower }}-ds.xml
+    register: scap_content
+    ignore_errors: yes
+
+  - name: Mostrar información del contenido SCAP
+    debug:
+      msg: "{{ scap_content.stdout }}"

@@ -1,0 +1,25 @@
+---
+- block:
+
+  - name: Lynis Scan Vul | Valida la ultima versión del Lynis.
+    uri:
+      url: https://api.github.com/repos/CISOfy/lynis/releases/latest
+      return_content: true
+    register: valida_version
+
+  - name: Lynis Scan Vul | Almacena su ultima versión.
+    set_fact:
+      tag: "{{ valida_version.json.tag_name }}"
+
+  - name: Lynis Scan Vul | Arma URL para su descarga.
+    set_fact:
+      lynis_paquete: "https://github.com/CISOfy/lynis/archive/refs/tags/{{ tag }}.tar.gz"
+
+  - name: Lynis Scan Vul | Descarga Lynis en su última versión.
+    get_url:
+      url: "{{ lynis_paquete }}"
+      dest: /tmp
+
+  delegate_to: localhost
+  connection: local
+  run_once: true

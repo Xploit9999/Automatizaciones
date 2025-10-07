@@ -1,0 +1,64 @@
+{
+"vulnerabilidades": [
+  {
+    "nombre": "Actualizaciones de seguridad pendientes",
+    "descripcion": "El sistema tiene actualizaciones de seguridad pendientes que podrían corregir vulnerabilidades conocidas.",
+    "recomendacion": "Ejecute 'apt-get upgrade' para instalar las actualizaciones de seguridad.",
+    "estado": "{{ 'Crítico' if updates.security_updates | length > 0 else 'Cumple' }}"
+  },
+  {
+    "nombre": "PermitRootLogin habilitado en SSH",
+    "descripcion": "El acceso root a través de SSH está habilitado, lo que aumenta el riesgo de ataques de fuerza bruta.",
+    "recomendacion": "Deshabilite PermitRootLogin en /etc/ssh/sshd_config.",
+    "estado": "{{ 'Crítico' if ssh_root_login.changed else 'Cumple' }}"
+  },
+  {
+    "nombre": "Protocolo SSH inseguro",
+    "descripcion": "El protocolo SSH 1 es inseguro y no debe ser utilizado.",
+    "recomendacion": "Asegúrese de que solo el protocolo SSH 2 esté habilitado en /etc/ssh/sshd_config.",
+    "estado": "{{ 'Crítico' if ssh_protocol.changed else 'Cumple' }}"
+  },
+  {
+    "nombre": "Firewall deshabilitado",
+    "descripcion": "El firewall no está activo, lo que expone el sistema a ataques de red.",
+    "recomendacion": "Habilite el firewall con 'ufw enable'.",
+    "estado": "{{ 'Crítico' if 'Status: inactive' in firewall_status.stdout else 'Cumple' }}"
+  },
+  {
+    "nombre": "Permisos inseguros en archivos críticos",
+    "descripcion": "Los permisos en archivos críticos como /etc/passwd, /etc/shadow o /etc/group no son seguros.",
+    "recomendacion": "Ajuste los permisos a 0644 para /etc/passwd y /etc/group, y 0400 para /etc/shadow.",
+    "estado": "{{ 'Crítico' if file_perms.results | selectattr('stat.mode', '!=', '0644') | list | length > 0 else 'Cumple' }}"
+  },
+  {
+    "nombre": "Cuentas sin contraseña",
+    "descripcion": "Existen cuentas de usuario sin contraseña, lo que permite acceso no autorizado.",
+    "recomendacion": "Asigne contraseñas seguras a todas las cuentas de usuario.",
+    "estado": "{{ 'Crítico' if empty_passwords.stdout_lines | length > 0 else 'Cumple' }}"
+  },
+  {
+    "nombre": "Servicios innecesarios activos",
+    "descripcion": "Hay servicios innecesarios que aumentan la superficie de ataque.",
+    "recomendacion": "Deshabilite los servicios innecesarios.",
+    "estado": "{{ 'Alto' if services.services | selectattr('state', '==', 'running') | list | length > 0 else 'Cumple' }}"
+  },
+  {
+    "nombre": "SELinux/AppArmor deshabilitado",
+    "descripcion": "SELinux o AppArmor no están habilitados, lo que reduce la seguridad del sistema.",
+    "recomendacion": "Habilite SELinux o AppArmor.",
+    "estado": "{{ 'Crítico' if selinux_status is defined and 'disabled' in selinux_status.stdout else 'Cumple' }}"
+  },
+  {
+    "nombre": "NTP no configurado",
+    "descripcion": "El servicio NTP no está configurado, lo que puede causar problemas de sincronización de tiempo.",
+    "recomendacion": "Configure NTP para sincronizar la hora correctamente.",
+    "estado": "{{ 'Medio' if ntp_service is defined and ntp_service.changed else 'Cumple' }}"
+  },
+  {
+    "nombre": "Parámetros de Sysctl inseguros",
+    "descripcion": "Los parámetros de seguridad del kernel no están configurados correctamente.",
+    "recomendacion": "Ajuste los parámetros de sysctl para mejorar la seguridad.",
+    "estado": "{{ 'Alto' if sysctl_params is defined and sysctl_params.changed else 'Cumple' }}"
+  }
+]
+}

@@ -1,0 +1,61 @@
+---
+- block:
+
+  - name: Leer el reporte XML de OpenSCAP
+    slurp:
+      src: "{{ reporte }}"
+    register: contenido
+
+  - name: Decodificar XML del reporte
+    set_fact:
+      reporte_xml: "{{ contenido.content | b64decode }}"
+
+  - name: Extraer reglas fallidas del XML
+    set_fact:
+      reglas_fallidas: "{{ reporte_xml | regex_findall('<rule-result[^>]+idref=\"([^\"]+)\"[^>]*>\\s*<result>fail</result>', multiline=True) }}"
+
+  - name: Clasificar reglas fallidas en categorías basadas en prefijos
+    set_fact:
+      metricas: >-
+        {%- set resultado = metricas | default({}) -%}
+        {%- for item in reglas_fallidas -%}
+          {%- set prefijo = item | regex_replace('xccdf_org.ssgproject.content_rule_([a-zA-Z0-9]+).*', '\\1_') -%}
+          {%- set categoria = categorias_tags.get(prefijo, 'Otros') -%}
+          {%- set _ = resultado.update({categoria: resultado.get(categoria, 0) + 1}) -%}
+        {%- endfor -%}
+        {{ resultado }}
+    vars:
+      metricas: {}
+
+  - name: Modelar query de inserción en la base de datos
+    set_fact:
+      queries: >
+        {% set inserts = [] %}
+        {%- for categoria, cantidad in metricas.items() -%}
+          {% set _ = inserts.append('INSERT INTO vulnerabilidades VALUES('
+                                    + quote + inventory_hostname + quote + ','
+                                    + quote + categoria + quote + ','
+                                    + cantidad|string + ','
+                                    + quote + ansible_os_family + quote + ');\n') %}
+        {%- endfor -%}
+        {{ inserts }}
+    vars:
+      quote: "'"
+
+  - name: Guardar query en un archivo SQL
+    lineinfile:
+      path: /tmp/queries/{{ inventory_hostname }}_vul.sql
+      line: "{{ queries | join }}"
+      create: true
+
+  - name: Registrar métricas en la base de datos
+    mysql_db:
+      login_user: root
+      login_password: Nuevo01
+      name: testing
+      target: /tmp/queries/{{ inventory_hostname }}_vul.sql
+      state: import
+
+  delegate_to: localhost
+  connection: local
+...

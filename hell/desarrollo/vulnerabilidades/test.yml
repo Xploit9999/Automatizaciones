@@ -1,0 +1,33 @@
+---
+- name: Escaneo de vulnerabilidades con OpenSCAP
+  hosts: all
+  tasks:
+
+    - copy:
+        src: /usr/share/xml/scap/ssg/content/ssg-alinux3-ds.xml
+        dest: /tmp/ssg-alinux3-ds.xml
+
+    - name: Ejecutar escaneo OpenSCAP desde el servidor central
+      shell: >
+        oscap-ssh {{ ansible_user }}@{{ inventory_hostname }} 22
+        xccdf eval --profile xccdf_org.ssgproject.content_profile_standard
+        --results-arf results-arf.xml
+        /usr/share/xml/scap/ssg/content/ssg-alinux3-ds.xml
+      args:
+        chdir: /tmp
+      register: scan_results
+      delegate_to: localhost
+      connection: local
+
+    - name: Copiar resultados al servidor central
+      fetch:
+        src: /tmp/results-arf.xml
+        dest: /tmp/reports/{{ inventory_hostname }}_scan_results.xml
+        flat: yes
+
+    - name: Convertir resultados a formato legible
+      shell: >
+        oscap xccdf generate report /tmp/reports/{{ inventory_hostname }}_scan_results.xml >
+        /tmp/reports/{{ inventory_hostname }}_scan_report.html
+      delegate_to: localhost
+      connection: local

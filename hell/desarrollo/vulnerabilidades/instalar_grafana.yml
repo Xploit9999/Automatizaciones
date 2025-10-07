@@ -1,0 +1,48 @@
+---
+- name: Instalación de Grafana
+  hosts: localhost
+  connection: local
+  become: true
+  gather_facts: false
+  pre_tasks:
+
+  - name: Grafana Instalación | Se descarga gpg del repositorio de grafana
+    get_url:
+      url: https://rpm.grafana.com/gpg.key
+      dest: /tmp/gpg.key
+
+  - name: Grafana Instalación | Se instala la gpgkey
+    rpm_key:
+      key: /tmp/gpg.key
+      state: present
+
+  - name: Grafana Instalación | Se crea repositorio para bajar e instalar el paquete de grafana server.
+    copy:
+      content: |
+        [grafana]
+        name=grafana
+        baseurl=https://rpm.grafana.com
+        repo_gpgcheck=1
+        enabled=1
+        gpgcheck=1
+        gpgkey=https://rpm.grafana.com/gpg.key
+        sslverify=1
+        sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+      dest: /etc/yum.repos.d/grafana.repo
+
+  - name: Grafana Instalación | Se comienza instalación de Grafana
+    yum:
+      name: grafana
+      state: present
+      enablerepo: "grafana"
+
+  - name: Grafana Instalación | Se recargan servicios del S.O
+    systemd:
+      daemon_reload: true
+
+  - name: Grafana Instalación | Se inicializa el servicio de Grafana server
+    systemd:
+      name: grafana-server
+      state: started
+      enabled: true
+...

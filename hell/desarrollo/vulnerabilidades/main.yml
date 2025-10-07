@@ -1,0 +1,33 @@
+---
+- name: Escaneo y reportes de vulnerabilidades de S.O (Windows,Linux & Unix)
+  hosts: all
+  gather_facts: false
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+
+  - name: Scan vul | Verificar actualizaciones de seguridad
+    include_tasks: tasks/actualizaciones.yml
+
+  - name: Scan Vul | Verificar configuraciones de SSH
+    include_tasks: tasks/ssh.yml
+
+  - name: Scan vul | Verificar permisos de archivos criticos
+    include_tasks: tasks/archivos_permisos.yml
+
+  - name: Scan vul | Verificar cuentas de usuarios
+    include_tasks: tasks/usuarios.yml
+
+  - name: Scan Vul | Verificar servicios inseguros
+    include_tasks: tasks/servicios.yml
+
+  - name: Scan Vul | Verificar SELinux
+    include_tasks: tasks/selinux.yml
+
+  - name: Scan Vul | Verificar NTP
+    include_tasks: tasks/ntp.yml
+
+  - name: Scan Vul | Verificar parametros de kernel
+    include_tasks: tasks/kernel.yml
+

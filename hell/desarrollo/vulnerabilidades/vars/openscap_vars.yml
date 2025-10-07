@@ -1,0 +1,23 @@
+---
+reporte: "/tmp/prueba_oscap_report.xml"
+categorias_tags:
+  audit_rules_: "Auditoría y Logs"
+  sysctl_net_: "Red y Firewall"
+  accounts_password_: "Contraseñas y Autenticación"
+  package_: "Paquetes y Software"
+  file_permissions_: "Permisos de Archivos"
+  service_: "Servicios"
+  mount_option_: "Montaje de Archivos"
+  sshd_: "SSH y Seguridad"
+  grub2_: "Kernel y Sistema"
+  chronyd_: "NTP"
+  aide_: "Integridad del Sistema"
+  sudo_: "Privilegios de Usuario"
+  partition_: "Particionamiento y Archivos"
+  configure_: "Políticas de Seguridad"
+  enable_: "Autenticación y Acceso"
+  banner_: "Mensajes de Advertencia"
+  account_: "Contraseñas y Autenticación"
+  accounts_: "Contraseñas y Autenticación"
+  default: "Otros"
+

@@ -1,0 +1,20 @@
+---
+- name: Verificar cuentas sin contraseñas
+  ansible.builtin.shell: "awk -F: '($2 == "") {print $1}' /etc/shadow"
+  register: users_without_passwords
+  changed_when: false
+
+- name: Alertar si hay cuentas sin contraseña
+  debug:
+    msg: "Usuarios sin contraseña detectados: {{ users_without_passwords.stdout_lines }}. Esto es peligroso porque un atacante podría acceder sin restricciones."
+  when: users_without_passwords.stdout_lines | length > 0
+
+- name: Listar usuarios con UID 0
+  ansible.builtin.command: "awk -F: '$3 == 0 {print $1}' /etc/passwd"
+  register: root_users
+  changed_when: false
+
+- name: Alertar si hay más de un usuario root
+  debug:
+    msg: "Usuarios con UID 0: {{ root_users.stdout_lines }}. Más de un usuario con privilegios de root puede incrementar el riesgo de accesos no controlados."
+  when: root_users.stdout_lines | length > 1

@@ -1,0 +1,13 @@
+---
+- name: Verificar parámetros de seguridad en sysctl
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  check_mode: yes
+  register: sysctl_params
+  with_items:
+    - { name: net.ipv4.conf.all.rp_filter, value: 1 }
+    - { name: net.ipv4.conf.default.rp_filter, value: 1 }
+    - { name: net.ipv4.icmp_echo_ignore_broadcasts, value: 1 }

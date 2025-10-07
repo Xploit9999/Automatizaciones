@@ -1,0 +1,45 @@
+---
+- name: Instalación y Escaneo con OPENSCAP
+  hosts: all
+  gather_facts: false
+  become: true
+  vars_files:
+    - vars/openscap_vars.yml
+  pre_tasks:
+
+  - name: Lynis Scan Vul | Valida version de Python en el/os servidor(es) remoto(s)
+    include_tasks: /home/yagami/Documents/git_proyectos/comprobar_python/comprobar_python.yml
+
+  - set_fact:
+      ansible_python_interpreter: "/usr/bin/python"
+    when: not usar_raw and python_version_actual >= "2.7" and python_version_actual < "3.6"
+
+  - name: OpenScap Scan | Limpieza de reporte viejos
+    include_tasks: tasks/limpieza_archivos.yml
+
+  - name: Openscap Scan | Instalar paquetes en el servidor central
+    yum:
+      name: 
+        - scap-security-guide
+        - openscap-scanner
+      state: present
+    delegate_to: localhost
+    connection: local
+
+  - name: Openscap Scan | Instalar escaner en el servidor remoto
+    yum:
+      name: 
+        - openscap-scanner
+        - scap-security-guide
+      state: present
+
+  tasks:
+  
+  - name: Openscap Scan | Openscap ejecución
+    include_tasks: tasks/openscap_ejecucion.yml
+
+  post_tasks:
+
+  - name: Openscap Scan | reporte y metricas
+    include_tasks: tasks/openscap_metricas.yml
+...

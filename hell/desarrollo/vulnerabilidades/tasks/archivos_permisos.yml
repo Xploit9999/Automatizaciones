@@ -1,0 +1,20 @@
+---
+- name: Revisar permisos en archivos críticos
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: file_permissions
+  loop:
+    - /etc/passwd
+    - /etc/shadow
+    - /etc/group
+    - /etc/gshadow
+    - /etc/sudoers
+
+- name: Alertar si los permisos son incorrectos
+  debug:
+    msg: "¡Alerta! Permisos incorrectos en {{ item.item }}: {{ item.stat.mode }}. Permisos incorrectos pueden permitir modificaciones no autorizadas."
+  when:
+    - item.stat.mode != "0644" and item.item in ["/etc/passwd", "/etc/group"]
+    - item.stat.mode != "0000" and item.item in ["/etc/shadow", "/etc/gshadow"]
+    - item.stat.mode != "0440" and item.item == "/etc/sudoers"
+  loop: "{{ file_permissions.results }}"

@@ -1,0 +1,28 @@
+---
+- name: Lynis Scan Vul | Se recolecta fact para reconocimiento del S.O
+  setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - os_family
+
+- name: Lynis Scan Vul | Envia y descomprime Lynis en el servidor remoto
+  unarchive:
+    src: /tmp/lynis-{{ tag }}.tar.gz
+    dest: /tmp
+    owner: root
+    group: root
+
+- name: Lynis Scan Vul | Realiza auditoria de seguridad.
+  shell: ./lynis audit system -q --report-file /tmp/{{ inventory_hostname }}_report.dat
+  register: auditoria
+  args:
+    chdir: /tmp/lynis-{{ tag }}
+    executable: /bin/sh
+
+- name: Lynis Scan Vul | Se extrae el reporte generado para el servidor master.
+  fetch:
+    src: /tmp/{{ inventory_hostname }}_report.dat
+    dest: /var/www/html/reportes/
+    flat: true
+...
