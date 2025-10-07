@@ -22,6 +22,7 @@
   - name: Openscap Scan | Se limpian registros de la base de datos.
   #- name: Lynis Scan Vul | Se limpian registros de la base de datos.
     mysql_query:
+      login_host: 127.0.0.1
       login_user: root
       login_password: 'Nuevo01'
       login_db: vulnerabilidades
