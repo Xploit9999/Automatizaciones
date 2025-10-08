@@ -40,27 +40,35 @@
     vars:
       quote: "'"
 
-  - name: Lynis Scan Vul | Genera archivo de query
-    lineinfile:
-      path: /tmp/queries/{{ inventory_hostname }}_vul.sql
-      line: "{{ queries | join }}"
-      create: true
-
-  - name: Lynis Scan Vul | Registra data a la base de datos.
-    mysql_db:
-      login_user: root
-      login_password: Nuevo01
-      name: testing
-      target: /tmp/queries/{{ inventory_hostname }}_vul.sql
-      state: import
-
-  - name: Lynis Scan Vul | Convierte reporte a formato HTML
-    shell: python /tmp/convertHTML.py {{ reporte }}
-
-  - file:
-      path: "{{ reporte }}"
-      state: absent
-
   delegate_to: localhost
   connection: local
+
+- block:
+  
+  - copy:
+      src: /tmp/queries/{{ inventory_hostname }}_vul.sql
+      dest: /tmp/
+
+    - name: Lynis Scan Vul | Genera archivo de query
+      lineinfile:
+        path: /tmp/{{ inventory_hostname }}_vul.sql
+        line: "{{ queries | join }}"
+        create: true
+
+    - name: Lynis Scan Vul | Registra data a la base de datos.
+      mysql_db:
+        login_user: root
+        login_password: Nuevo01
+        name: testing
+        target: /tmp/{{ inventory_hostname }}_vul.sql
+        state: import
+
+    - name: Lynis Scan Vul | Convierte reporte a formato HTML
+      shell: python /tmp/convertHTML.py {{ reporte }}
+
+    - file:
+        path: "{{ reporte }}"
+        state: absent
+
+  delegate_to: srv-testing
 ...
