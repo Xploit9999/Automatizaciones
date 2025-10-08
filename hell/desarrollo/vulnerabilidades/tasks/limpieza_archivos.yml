@@ -28,6 +28,7 @@
       login_db: vulnerabilidades
       query:
         - DELETE FROM vulnerabilidades;
+      login_unix_socket: ""
 
   delegate_to: localhost
   connection: local
