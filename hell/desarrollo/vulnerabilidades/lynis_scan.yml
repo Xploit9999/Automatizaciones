@@ -7,6 +7,13 @@
     - vars/main.yml
   pre_tasks:
 
+
+  - shell: curl -sv localhost:3306
+
+  - shell: curl -sv 127.0.0.1:3306
+
+  - shell: mysql -u root -pNuevo01 -D vulnerabilidades -e 'Select * from vulnerabilidades' --protocol=tcp
+
   - name: Lynis Scan Vul | Valida version de Python en el/os servidor(es) remoto(s)
     include_tasks: tasks/comprobar_python.yml
 
