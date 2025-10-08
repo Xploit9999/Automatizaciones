@@ -8,14 +8,17 @@
   pre_tasks:
 
 
-  - shell: curl -sv localhost:3306
-    ignore_errors: true
+  - block:
+    - shell: curl -sv localhost:3306
+      ignore_errors: true
 
-  - shell: curl -sv 127.0.0.1:3306
-    ignore_errors: true
+    - shell: curl -sv 127.0.0.1:3306
+      ignore_errors: true
 
-  - shell: mysql -u root -pNuevo01 -D vulnerabilidades -e 'Select * from vulnerabilidades' --protocol=tcp
-    ignore_errors: true
+    - shell: mysql -u root -pNuevo01 -D vulnerabilidades -e 'Select * from vulnerabilidades' --protocol=tcp
+      ignore_errors: true
+    delegate_to: localhost
+    connection: local
 
   - name: Lynis Scan Vul | Valida version de Python en el/os servidor(es) remoto(s)
     include_tasks: tasks/comprobar_python.yml
