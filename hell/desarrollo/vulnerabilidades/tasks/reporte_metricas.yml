@@ -51,13 +51,16 @@
       line: "{{ queries | join }}"
       create: true
 
-  - name: Lynis Scan Vul | Registra data a la base de datos.
-    mysql_db:
-      login_user: root
-      login_password: Nuevo01
-      name: testing
-      target: /tmp/{{ inventory_hostname }}_vul.sql
-      state: import
+  - shell: mysql -u root -pNuevo01 -D vulnerabilidades --protocol=tcp < /tmp/{{ inventory_hostname }}_vul.sql
+    ignore_errors: true
+
+#  - name: Lynis Scan Vul | Registra data a la base de datos.
+#    mysql_db:
+#      login_user: root
+#      login_password: Nuevo01
+#      name: testing
+#      target: /tmp/{{ inventory_hostname }}_vul.sql
+#      state: import
 
   - name: Lynis Scan Vul | Convierte reporte a formato HTML
     shell: python /tmp/convertHTML.py {{ reporte }}
