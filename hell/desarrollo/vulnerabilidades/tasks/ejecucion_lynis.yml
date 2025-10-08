@@ -23,7 +23,11 @@
 - name: Lynis Scan Vul | Se extrae el reporte generado para el servidor master.
   fetch:
     src: /tmp/{{ inventory_hostname }}_report.dat
-    dest: /var/www/html/reportes/
+    dest: /tmp
     flat: true
+
+- copy:
+    src: /tmp/{{ inventory_hostname }}_report.dat
+    dest: /var/www/html/reportes/
   delegate_to: srv-testing
 ...
