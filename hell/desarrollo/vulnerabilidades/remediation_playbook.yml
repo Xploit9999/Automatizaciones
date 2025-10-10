@@ -1,0 +1,131 @@
+---
+- name: Lynis auto-remediation (conservative)
+  hosts: all
+  become: true
+  vars:
+    lynis_backup_dir: /var/backups/lynis_remediation_backup/{{ inventory_hostname }}
+  pre_tasks:
+    - name: Create backup dir
+      file:
+        path: "{{ lynis_backup_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0700
+
+  tasks:
+    - name: Ensure telnet and rsh packages are absent (insecure services)
+      package:
+        name:
+          - telnet
+          - telnet-server
+          - rsh
+          - rsh-server
+          - xinetd
+        state: absent
+
+    - name: Backup /etc/ssh/sshd_config if exists
+      copy:
+        src: /etc/ssh/sshd_config
+        dest: "{{ lynis_backup_dir }}/sshd_config.bak"
+        remote_src: yes
+      ignore_errors: true
+
+    - name: Disable root login and password auth in sshd_config (conservative)
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^\s*PermitRootLogin\b'
+        line: 'PermitRootLogin no'
+        state: present
+        backrefs: yes
+
+    - name: Ensure PasswordAuthentication no in sshd_config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^\s*PasswordAuthentication\b'
+        line: 'PasswordAuthentication no'
+        state: present
+        backrefs: yes
+
+    - name: Restart sshd if config changed
+      service:
+        name: "{{ 'sshd' if ansible_facts['os_family'] != 'Debian' else 'ssh' }}"
+        state: restarted
+      when: ansible_facts['os_family'] is defined
+
+    - name: Backup world-writable files list
+      shell: "find / -xdev -type f -perm -0002 -print 2>/dev/null > {{ lynis_backup_dir }}/world_writable_files.txt || true"
+      args:
+        executable: /bin/bash
+
+    - name: Remove world-writable bit from files found (exclude /tmp /var/tmp)
+      shell: |
+        set -e
+        while read -r f; do
+          if [[ "$f" != "/tmp"* && "$f" != "/var/tmp"* ]]; then
+            chmod o-w "$f" || true
+          fi
+        done < {{ lynis_backup_dir }}/world_writable_files.txt
+      args:
+        executable: /bin/bash
+      when: lynis_backup_dir is defined
+
+    - name: Backup /etc/login.defs and /etc/security/pwquality.conf if present
+      copy:
+        src: "{{ item }}"
+        dest: "{{ lynis_backup_dir }}/{{ item | basename }}.bak"
+        remote_src: yes
+      loop:
+        - /etc/login.defs
+        - /etc/security/pwquality.conf
+      ignore_errors: true
+
+    - name: Enforce password minimum length in /etc/login.defs
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^\s*PASS_MIN_LEN'
+        line: 'PASS_MIN_LEN 12'
+        create: yes
+      notify: update_pam_pwquality
+
+    - name: Ensure SELinux is enforcing (if selinux is installed)
+      selinux:
+        policy: targeted
+        state: enforcing
+      ignore_errors: true
+
+    - name: Ensure firewalld is installed and running (if available)
+      block:
+        - name: Install firewalld
+          package:
+            name: firewalld
+            state: present
+        - name: Ensure firewalld enabled and started
+          service:
+            name: firewalld
+            state: started
+            enabled: yes
+      when: ansible_facts['pkg_mgr'] != 'apt'
+
+  handlers:
+    - name: update_pam_pwquality
+      block:
+        - name: Ensure pwquality.conf has minlen
+          lineinfile:
+            path: /etc/security/pwquality.conf
+            regexp: '^\s*minlen\b'
+            line: 'minlen = 12'
+            create: yes
+        - name: Restart sshd to apply PAM changes
+          service:
+            name: "{{ 'sshd' if ansible_facts['os_family'] != 'Debian' else 'ssh' }}"
+            state: restarted
+      when: ansible_facts is defined
+
+  post_tasks:
+    - name: Record remediation summary
+      copy:
+        content: "Lynis remediation applied on {{ ansible_date_time.date }} {{ ansible_date_time.time }}\n"
+        dest: "{{ lynis_backup_dir }}/remediation_record.txt"
+        remote_src: no
+        mode: '0600'

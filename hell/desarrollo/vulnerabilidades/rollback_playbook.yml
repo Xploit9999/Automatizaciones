@@ -1,0 +1,44 @@
+---
+- name: Lynis remediation rollback
+  hosts: all
+  become: true
+  vars:
+    lynis_backup_dir: /var/backups/lynis_remediation_backup/{{ inventory_hostname }}
+  tasks:
+    - name: Restore sshd_config if backup exists
+      copy:
+        src: "{{ lynis_backup_dir }}/sshd_config.bak"
+        dest: /etc/ssh/sshd_config
+        remote_src: yes
+      ignore_errors: true
+
+    - name: Restore login.defs if backup exists
+      copy:
+        src: "{{ lynis_backup_dir }}/login.defs.bak"
+        dest: /etc/login.defs
+        remote_src: yes
+      ignore_errors: true
+
+    - name: Restore pwquality.conf if backup exists
+      copy:
+        src: "{{ lynis_backup_dir }}/pwquality.conf.bak"
+        dest: /etc/security/pwquality.conf
+        remote_src: yes
+      ignore_errors: true
+
+    - name: Re-apply world-writable bits from recorded list (if exists)
+      shell: |
+        set -e
+        if [ -f "{{ lynis_backup_dir }}/world_writable_files.txt" ]; then
+          while read -r f; do
+            if [ -e "$f" ]; then
+              chmod o+w "$f" || true
+            fi
+          done < "{{ lynis_backup_dir }}/world_writable_files.txt"
+        fi
+      args:
+        executable: /bin/bash
+
+    - name: Report rollback done
+      debug:
+        msg: "Rollback actions attempted. Verify manually for services and SELinux state."
