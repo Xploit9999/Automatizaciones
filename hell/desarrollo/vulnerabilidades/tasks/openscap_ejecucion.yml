@@ -19,4 +19,12 @@
   loop:
     - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html" }
     - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.xml", destino: "/tmp/reportes/{{ inventory_hostname }}_oscap_report.xml" }
+
+- copy:
+    src: "{{ item.origen }}"
+    dest: "{{ item.destino }}"
+  loop:
+    - { origen: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html" }
+    - { origen: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.xml", destino: "/tmp/reportes/{{ inventory_hostname }}_oscap_report.xml" }
+  delegate_to: srv-testing
 ...

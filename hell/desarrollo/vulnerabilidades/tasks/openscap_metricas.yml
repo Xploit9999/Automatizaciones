@@ -42,20 +42,28 @@
     vars:
       quote: "'"
 
+  delegate_to: localhost
+  connection: local
+
+- block:
+
   - name: Guardar query en un archivo SQL
     lineinfile:
       path: /tmp/queries/{{ inventory_hostname }}_vul.sql
       line: "{{ queries | join }}"
       create: true
 
-  - name: Registrar métricas en la base de datos
-    mysql_db:
-      login_user: root
-      login_password: Nuevo01
-      name: testing
-      target: /tmp/queries/{{ inventory_hostname }}_vul.sql
-      state: import
+  - shell: mysql -u root -pNuevo01 -D vulnerabilidades --protocol=tcp < /tmp/{{ inventory_hostname }}_vul.sql
+    ignore_errors: true
 
-  delegate_to: localhost
-  connection: local
+  # - name: Registrar métricas en la base de datos
+  #   mysql_db:
+  #     login_user: root
+  #     login_password: Nuevo01
+  #     name: testing
+  #     target: /tmp/queries/{{ inventory_hostname }}_vul.sql
+  #     state: import
+
+
+  delegate_to: srv-testing
 ...
