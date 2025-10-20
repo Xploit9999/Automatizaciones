@@ -12,10 +12,13 @@
 
   pre_tasks:
     - ansible.builtin.shell: |
-        mysqldump -u root -pNuevo01 vulnerabilidades vulnerabilidades > {{ backup_file }}
+        mysqldump -u root -pNuevo01 vulnerabilidades vulnerabilidades --protocol=tcp > {{ backup_file }}
       args:
         executable: /bin/bash
       changed_when: true
+      delegate_to: srv-testing
+      run_once: true      
+
 
     - name: Create backup dir
       file:
