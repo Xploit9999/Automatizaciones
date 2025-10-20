@@ -5,6 +5,22 @@
   vars:
     lynis_backup_dir: /var/backups/lynis_remediation_backup/{{ inventory_hostname }}
   tasks:
+
+    - name: Reinstall removed packages if backup list exists
+      shell: |
+        set -e
+        if [ -f "/tmp/removed_packages.txt" ]; then
+          while read -r pkg; do
+            if ! rpm -q "$pkg" &>/dev/null; then
+              echo "Reinstalling $pkg..."
+              dnf install -y "$pkg" || yum install -y "$pkg" || true
+            fi
+          done < "/tmp/removed_packages.txt"
+        fi
+      args:
+        executable: /bin/bash
+      when: ansible_facts['pkg_mgr'] != 'apt'
+
     - name: Restore sshd_config if backup exists
       copy:
         src: "{{ lynis_backup_dir }}/sshd_config.bak"
