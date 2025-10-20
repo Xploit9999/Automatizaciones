@@ -115,6 +115,14 @@
             enabled: yes
       when: ansible_facts['pkg_mgr'] != 'apt'
 
+  post_tasks:
+    - name: Record remediation summary
+      copy:
+        content: "Lynis remediation applied on {{ ansible_date_time.date }} {{ ansible_date_time.time }}\n"
+        dest: "{{ lynis_backup_dir }}/remediation_record.txt"
+        remote_src: no
+        mode: '0600'
+
   handlers:
     - name: update_pam_pwquality
       block:
@@ -129,11 +137,3 @@
             name: "{{ 'sshd' if ansible_facts['os_family'] != 'Debian' else 'ssh' }}"
             state: restarted
       when: ansible_facts is defined
-
-  post_tasks:
-    - name: Record remediation summary
-      copy:
-        content: "Lynis remediation applied on {{ ansible_date_time.date }} {{ ansible_date_time.time }}\n"
-        dest: "{{ lynis_backup_dir }}/remediation_record.txt"
-        remote_src: no
-        mode: '0600'
