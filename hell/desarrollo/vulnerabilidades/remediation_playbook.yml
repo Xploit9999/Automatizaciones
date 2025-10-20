@@ -182,10 +182,10 @@
         name: "{{ 'sshd' if ansible_facts['os_family'] != 'Debian' else 'ssh' }}"
         state: restarted
 
-    - name: restart auditd
-      service:
-        name: auditd
-        state: restarted
+    - name: reload auditd rules safely
+      shell: service auditd reload || true
+      args:
+        executable: /bin/bash        
 
     - name: restart chronyd
       service:
