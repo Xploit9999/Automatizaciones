@@ -49,7 +49,7 @@
 
   - name: Guardar query en un archivo SQL
     lineinfile:
-      path: /tmp/queries/{{ inventory_hostname }}_vul.sql
+      path: /tmp/{{ inventory_hostname }}_vul.sql
       line: "{{ queries | join }}"
       create: true
 
