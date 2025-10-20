@@ -4,57 +4,55 @@
   become: true
   vars:
     lynis_backup_dir: /var/backups/lynis_remediation_backup/{{ inventory_hostname }}
-  tasks:
 
-    - name: Reinstall removed packages if backup list exists
+  tasks:
+    - name: Restore configuration backups
+      copy:
+        src: "{{ item }}"
+        dest: "/etc/{{ item | basename | regex_replace('\\.bak$', '') }}"
+        remote_src: yes
+      loop:
+        - "{{ lynis_backup_dir }}/sshd_config.bak"
+        - "{{ lynis_backup_dir }}/pwquality.conf.bak"
+        - "{{ lynis_backup_dir }}/login.defs.bak"
+        - "{{ lynis_backup_dir }}/auditd.conf.bak"
+        - "{{ lynis_backup_dir }}/chrony.conf.bak"
+      ignore_errors: true
+
+    - name: Reinstall removed packages if recorded
       shell: |
-        set -e
-        if [ -f "/tmp/removed_packages.txt" ]; then
+        if [ -f "{{ lynis_backup_dir }}/removed_packages.txt" ]; then
           while read -r pkg; do
             if ! rpm -q "$pkg" &>/dev/null; then
               echo "Reinstalling $pkg..."
               dnf install -y "$pkg" || yum install -y "$pkg" || true
             fi
-          done < "/tmp/removed_packages.txt"
+          done < "{{ lynis_backup_dir }}/removed_packages.txt"
         fi
       args:
         executable: /bin/bash
       when: ansible_facts['pkg_mgr'] != 'apt'
 
-    - name: Restore sshd_config if backup exists
-      copy:
-        src: "{{ lynis_backup_dir }}/sshd_config.bak"
-        dest: /etc/ssh/sshd_config
-        remote_src: yes
-      ignore_errors: true
-
-    - name: Restore login.defs if backup exists
-      copy:
-        src: "{{ lynis_backup_dir }}/login.defs.bak"
-        dest: /etc/login.defs
-        remote_src: yes
-      ignore_errors: true
-
-    - name: Restore pwquality.conf if backup exists
-      copy:
-        src: "{{ lynis_backup_dir }}/pwquality.conf.bak"
-        dest: /etc/security/pwquality.conf
-        remote_src: yes
-      ignore_errors: true
-
-    - name: Re-apply world-writable bits from recorded list (if exists)
+    - name: Re-apply world-writable bits (if file exists)
       shell: |
-        set -e
         if [ -f "{{ lynis_backup_dir }}/world_writable_files.txt" ]; then
           while read -r f; do
-            if [ -e "$f" ]; then
-              chmod o+w "$f" || true
-            fi
+            [ -e "$f" ] && chmod o+w "$f" || true
           done < "{{ lynis_backup_dir }}/world_writable_files.txt"
         fi
       args:
         executable: /bin/bash
 
-    - name: Report rollback done
+    - name: Restart critical services
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - sshd
+        - auditd
+        - chronyd
+      ignore_errors: true
+
+    - name: Report rollback summary
       debug:
-        msg: "Rollback actions attempted. Verify manually for services and SELinux state."
+        msg: "Rollback complete — verify SELinux, firewalld, and SSH manually."
