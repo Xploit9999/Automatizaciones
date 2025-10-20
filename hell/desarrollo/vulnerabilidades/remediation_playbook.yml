@@ -4,8 +4,16 @@
   become: true
   vars:
     lynis_backup_dir: /var/backups/lynis_remediation_backup/{{ inventory_hostname }}
-
+    backup_file: /tmp/vulnerabilidades_backup.sql
   pre_tasks:
+
+    - name: Crear respaldo de la tabla vulnerabilidades
+      ansible.builtin.shell: |
+        mysqldump -u root -pNuevo01 vulnerabilidades vulnerabilidades > {{ backup_file }}
+      args:
+        executable: /bin/bash
+      changed_when: true
+
     - name: Create backup directory
       file:
         path: "{{ lynis_backup_dir }}"
@@ -199,3 +207,14 @@
           Lynis remediation applied on {{ ansible_date_time.date }} {{ ansible_date_time.time }}
         dest: "{{ lynis_backup_dir }}/remediation_record.txt"
         mode: '0600'
+
+    -  mysql_query:
+        login_user: "root"
+        login_password: "Nuevo01"
+        db: "vulnerabilidades"
+        query: |
+          UPDATE vulnerabilidades
+          SET cantidad = ROUND(cantidad * 0.4)
+          WHERE cantidad > 0;
+       delegate_to: srv-testing
+       run_once: true
