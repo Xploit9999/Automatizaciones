@@ -1,34 +1,22 @@
 ---
-- name: Lynis auto-remediation (secure & measurable)
+- name: Remediación orientada a OpenSCAP y rescan
   hosts: all
   become: true
   vars:
-    lynis_backup_dir: /var/backups/lynis_remediation_backup/{{ inventory_hostname }}
-    backup_file: /tmp/vulnerabilidades_backup.sql
+    lynis_backup_dir: /var/backups/oscap_remediation/{{ inventory_hostname }}
+    ds_path: /usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml   # AJUSTA según distro & versión
+    oscap_profile: xccdf_org.ssgproject.content_profile_stig   # AJUSTA el perfil (ej: cis)
+    oscap_results: /var/log/oscap/results-{{ inventory_hostname }}.xml
+    oscap_report: /var/log/oscap/report-{{ inventory_hostname }}.html
+
   pre_tasks:
-
-    - name: Crear respaldo de la tabla vulnerabilidades
-      ansible.builtin.shell: |
-        mysqldump -u root -pNuevo01 vulnerabilidades vulnerabilidades --protocol=tcp > {{ backup_file }}
-      args:
-        executable: /bin/bash
-      changed_when: true
-      delegate_to: srv-testing
-      run_once: true
-
-    - name: Create backup directory
+    - name: Create backup dir
       file:
         path: "{{ lynis_backup_dir }}"
         state: directory
-        owner: root
-        group: root
-        mode: 0700
+        mode: '0700'
 
-  tasks:
-    #####################################################################
-    # 1. BACKUPS
-    #####################################################################
-    - name: Backup key config files
+    - name: Backup important config files
       copy:
         src: "{{ item }}"
         dest: "{{ lynis_backup_dir }}/{{ item | basename }}.bak"
@@ -37,178 +25,87 @@
         - /etc/ssh/sshd_config
         - /etc/security/pwquality.conf
         - /etc/login.defs
-        - /etc/audit/auditd.conf
         - /etc/chrony.conf
+        - /etc/audit/rules.d/hardening.rules
       ignore_errors: true
 
-    #####################################################################
-    # 2. AUTH / PASSWORD POLICIES
-    #####################################################################
-    - name: Enforce password policy (length & complexity)
-      block:
-        - name: Ensure pwquality.conf minimum length
-          lineinfile:
-            path: /etc/security/pwquality.conf
-            regexp: '^minlen'
-            line: 'minlen = 12'
-            create: yes
+  tasks:
+    # --- ejemplo de remediaciones "texto exacto" que OpenSCAP suele aceptar ---
+    - name: Ensure PermitRootLogin no in sshd_config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        create: yes
+        backup: yes
+      notify: restart_sshd
 
-        - name: Ensure password complexity
-          lineinfile:
-            path: /etc/security/pwquality.conf
-            regexp: '^minclass'
-            line: 'minclass = 4'
-            create: yes
+    - name: Ensure PasswordAuthentication no in sshd_config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        create: yes
+        backup: yes
+      notify: restart_sshd
 
-        - name: Set PASS_MIN_LEN in login.defs
-          lineinfile:
-            path: /etc/login.defs
-            regexp: '^PASS_MIN_LEN'
-            line: 'PASS_MIN_LEN 12'
-            create: yes
+    - name: Ensure pwquality minlen (pwquality.conf)
+      lineinfile:
+        path: /etc/security/pwquality.conf
+        regexp: '^minlen'
+        line: 'minlen = 12'
+        create: yes
+        backup: yes
 
-    #####################################################################
-    # 3. SSH HARDENING
-    #####################################################################
-    - name: Harden SSH (disable root/password login)
-      block:
-        - name: Disable root login
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: '^#?PermitRootLogin'
-            line: 'PermitRootLogin no'
-            create: yes
+    - name: Ensure PASS_MIN_LEN in login.defs
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^PASS_MIN_LEN'
+        line: 'PASS_MIN_LEN 12'
+        create: yes
+        backup: yes
 
-        - name: Disable password authentication
-          lineinfile:
-            path: /etc/ssh/sshd_config
-            regexp: '^#?PasswordAuthentication'
-            line: 'PasswordAuthentication no'
-            create: yes
-      notify: restart sshd
-
-    #####################################################################
-    # 4. REMOVE INSECURE PACKAGES
-    #####################################################################
-    - name: Backup list of insecure packages before removal
-      shell: |
-        rpm -q telnet telnet-server rsh rsh-server xinetd --qf '%{NAME}\n' 2>/dev/null | grep -v 'is not installed' > {{ lynis_backup_dir }}/removed_packages.txt || true
-      args:
-        executable: /bin/bash
-      when: ansible_facts['pkg_mgr'] != 'apt'
-
-    - name: Remove insecure network packages
-      package:
-        name:
-          - telnet
-          - telnet-server
-          - rsh
-          - rsh-server
-          - xinetd
-        state: absent
-
-    #####################################################################
-    # 5. SELINUX & FIREWALL
-    #####################################################################
-    - name: Enforce SELinux if installed
-      selinux:
-        policy: targeted
-        state: enforcing
-      ignore_errors: true
-
-    - name: Ensure firewalld installed and active
-      block:
-        - name: Install firewalld
-          package:
-            name: firewalld
-            state: present
-        - name: Enable and start firewalld
-          service:
-            name: firewalld
-            state: started
-            enabled: yes
-
-    - name: Ensure firewalld zone configured
-      firewalld:
-        zone: public
-        state: enabled
-        permanent: yes
-
-    #####################################################################
-    # 6. TIME SYNC (CHRONY)
-    #####################################################################
-    - name: Configure chrony NTP servers
+    - name: Ensure chrony configured with pool servers (append if missing)
       blockinfile:
         path: /etc/chrony.conf
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - NTP servers"
         block: |
           server 0.pool.ntp.org iburst
           server 1.pool.ntp.org iburst
-          driftfile /var/lib/chrony/drift
-      notify: restart chronyd
+      notify: restart_chronyd
 
-    - name: Enable and start chronyd
-      service:
-        name: chronyd
-        state: started
-        enabled: yes
-
-    #####################################################################
-    # 7. AUDITD
-    #####################################################################
-    - name: Ensure auditd installed and running
-      package:
-        name: audit
-        state: present
-
-    - name: Deploy base audit rules
+    - name: Deploy basic audit rules for passwd/shadow/sudoers
       copy:
         dest: /etc/audit/rules.d/hardening.rules
         content: |
           -w /etc/passwd -p wa -k passwd_changes
           -w /etc/shadow -p wa -k shadow_changes
           -w /etc/sudoers -p wa -k sudoers_changes
-      notify: restart auditd
+      notify: reload_auditd
 
-    #####################################################################
-    # 8. WORLD WRITABLE FILES
-    #####################################################################
-    - name: Backup world-writable files
-      shell: "find / -xdev -type f -perm -0002 -print 2>/dev/null > {{ lynis_backup_dir }}/world_writable_files.txt || true"
-      args:
-        executable: /bin/bash
-
-    - name: Remove world-writable bit (safe paths excluded)
+    - name: Remove world writable bit from files (recorded already by your other playbook)
       shell: |
-        while read -r f; do
-          [[ "$f" =~ ^/tmp|^/var/tmp ]] && continue
-          chmod o-w "$f" || true
-        done < {{ lynis_backup_dir }}/world_writable_files.txt
+        find / -xdev -type f -perm -0002 -not -path '/tmp/*' -not -path '/var/tmp/*' -print0 | xargs -0 -r chmod o-w || true
       args:
         executable: /bin/bash
 
   handlers:
-    - name: restart sshd
+    - name: restart_sshd
       service:
         name: "{{ 'sshd' if ansible_facts['os_family'] != 'Debian' else 'ssh' }}"
         state: restarted
 
-    - name: reload auditd rules safely
-      shell: service auditd reload || true
-      args:
-        executable: /bin/bash        
-
-    - name: restart chronyd
+    - name: restart_chronyd
       service:
         name: chronyd
         state: restarted
+        enabled: yes
 
-  post_tasks:
-    - name: Record remediation summary
-      copy:
-        content: |
-          Lynis remediation applied on {{ ansible_date_time.date }} {{ ansible_date_time.time }}
-        dest: "{{ lynis_backup_dir }}/remediation_record.txt"
-        mode: '0600'
+    - name: reload_auditd
+      shell: |
+        augenrules --load || /sbin/service auditd reload || true
+      args:
+        executable: /bin/bash
 
     -  mysql_query:
         login_user: "root"
