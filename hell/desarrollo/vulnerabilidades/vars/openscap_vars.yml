@@ -1,5 +1,5 @@
 ---
-reporte: "/tmp/{{ inventory_hostname }}_oscap_report.xml"
+reporte: "/tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.xml"
 categorias_tags:
   audit_rules_: "Auditoría y Logs"
   sysctl_net_: "Red y Firewall"

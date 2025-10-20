@@ -7,7 +7,7 @@
       - os_family
 
 - name: Openscap Scan | Ejecuta escaneo
-  shell: oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_cis --report /tmp/{{ inventory_hostname }}_oscap_report.html --results /tmp/{{ inventory_hostname }}_oscap_report.xml /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml >/dev/null 2>&1
+  shell: oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_cis --report /tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.html --results /tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.xml /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml >/dev/null 2>&1
   register: resultado
   failed_when: resultado.rc > 2
 
@@ -17,14 +17,14 @@
     dest: "{{ item.destino }}"
     flat: true
   loop:
-    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.html", destino: "/tmp/{{ inventory_hostname }}_oscap_report.html" }
-    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.xml", destino: "/tmp/{{ inventory_hostname }}_oscap_report.xml" }
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.html", destino: "/tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.html" }
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.xml", destino: "/tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.xml" }
 
 - copy:
     src: "{{ item.origen }}"
     dest: "{{ item.destino }}"
   loop:
-    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html" }
-    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.xml", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.xml" }    
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.html" }
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.xml", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.xml" }    
   delegate_to: srv-testing
 ...

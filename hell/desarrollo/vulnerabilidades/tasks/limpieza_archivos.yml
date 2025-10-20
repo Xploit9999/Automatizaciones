@@ -9,7 +9,7 @@
     loop:
       - "/tmp/queries/"
       - "/tmp/reportes/"
-      - "/var/www/html/reportes/"
+#      - "/var/www/html/reportes/"
 
   - file:
       path: "{{ item }}"
