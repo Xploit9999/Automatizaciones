@@ -213,7 +213,7 @@
     -  mysql_query:
         login_user: "root"
         login_password: "Nuevo01"
-        db: "vulnerabilidades"
+        login_db: "vulnerabilidades"
         query: |
           UPDATE vulnerabilidades
           SET cantidad = ROUND(cantidad * 0.4)
