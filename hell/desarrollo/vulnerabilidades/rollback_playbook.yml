@@ -58,7 +58,7 @@
         msg: "Rollback complete — verify SELinux, firewalld, and SSH manually."
  
     - shell: |
-        mysql -u root -pNuevo01 vulnerabilidades < {{ backup_file }}
+        mysql -u root -pNuevo01 vulnerabilidades --protocol=tcp < {{ backup_file }}
       args:
         executable: /bin/bash
       changed_when: true

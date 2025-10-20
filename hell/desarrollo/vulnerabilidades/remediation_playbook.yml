@@ -9,7 +9,7 @@
 
     - name: Crear respaldo de la tabla vulnerabilidades
       ansible.builtin.shell: |
-        mysqldump -u root -pNuevo01 vulnerabilidades vulnerabilidades > {{ backup_file }}
+        mysqldump -u root -pNuevo01 vulnerabilidades vulnerabilidades --protocol=tcp > {{ backup_file }}
       args:
         executable: /bin/bash
       changed_when: true
@@ -218,5 +218,6 @@
           UPDATE vulnerabilidades
           SET cantidad = ROUND(cantidad * 0.4)
           WHERE cantidad > 0;
+        login_unix_socket: ""
        delegate_to: srv-testing
        run_once: true
