@@ -31,7 +31,4 @@
 
   delegate_to: srv-testing
   run_once: true
-
-- pause:
-    minutes: 5
 ...
