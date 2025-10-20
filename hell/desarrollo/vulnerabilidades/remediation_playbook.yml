@@ -14,6 +14,14 @@
         mode: 0700
 
   tasks:
+
+    - name: List insecure packages before removal
+      shell: |
+        rpm -q telnet telnet-server rsh rsh-server xinetd --qf '%{NAME}\n' 2>/dev/null | grep -v 'is not installed' > /tmp/removed_packages.txt || true
+      args:
+        executable: /bin/bash
+      when: ansible_facts['pkg_mgr'] != 'apt'
+
     - name: Ensure telnet and rsh packages are absent (insecure services)
       package:
         name:
