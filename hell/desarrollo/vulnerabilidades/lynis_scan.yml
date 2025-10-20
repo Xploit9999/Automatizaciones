@@ -17,6 +17,9 @@
   - name: Lynis Scan Vul | Limpieza de reporte viejos
     include_tasks: tasks/limpieza_archivos.yml
 
+  - pause:
+      minutes: 5
+      
   - name: Lynis Scan Vul | Se realiza descarga de Lynis.
     include_tasks: tasks/descargar_lynis.yml
 
