@@ -1,0 +1,166 @@
+---
+- name: Make system intentionally more vulnerable (LAB ONLY)
+  hosts: all
+  become: true
+  vars:
+    backup_dir: /var/backups/make_vulnerable/{{ inventory_hostname }}
+    apply_world_writable: true      # set to false if you don't want mass chmod o+w
+    world_writable_whitelist:        # paths to keep excluded from being modified to writable
+      - /tmp
+      - /var/tmp
+    mysql_delegate_host: srv-testing
+    mysql_db: vulnerabilidades
+    mysql_user: root
+    mysql_pass: "Nuevo01"
+  pre_tasks:
+    - name: Create backup dir
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Backup important config files before making insecure changes
+      copy:
+        src: "{{ item }}"
+        dest: "{{ backup_dir }}/{{ item | basename }}.bak"
+        remote_src: yes
+      loop:
+        - /etc/ssh/sshd_config
+        - /etc/security/pwquality.conf
+        - /etc/login.defs
+        - /etc/chrony.conf
+        - /etc/audit/rules.d/hardening.rules
+      ignore_errors: true
+
+  tasks:
+    ############################################################
+    # 1) SSH: allow root login and password authentication
+    ############################################################
+    - name: Permit root login via SSH (PermitRootLogin yes)
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin yes'
+        create: yes
+        backup: yes
+      notify: restart_sshd
+
+    - name: Enable PasswordAuthentication in sshd_config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+        create: yes
+        backup: yes
+      notify: restart_sshd
+
+    ############################################################
+    # 2) Password policy: weaken
+    ############################################################
+    - name: Lower pwquality minlen to 6 (weaker)
+      lineinfile:
+        path: /etc/security/pwquality.conf
+        regexp: '^minlen'
+        line: 'minlen = 6'
+        create: yes
+        backup: yes
+
+    - name: Lower PASS_MIN_LEN in login.defs to 6
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^PASS_MIN_LEN'
+        line: 'PASS_MIN_LEN 6'
+        create: yes
+        backup: yes
+
+    ############################################################
+    # 3) SELinux -> permissive
+    ############################################################
+    - name: Set SELinux to permissive (if selinux present)
+      selinux:
+        policy: targeted
+        state: permissive
+      ignore_errors: true
+
+    ############################################################
+    # 4) Firewall -> stop & disable firewalld
+    ############################################################
+    - name: Stop and disable firewalld
+      service:
+        name: firewalld
+        state: stopped
+        enabled: no
+      ignore_errors: true
+
+    ############################################################
+    # 5) Auditd -> stop and disable (best-effort)
+    ############################################################
+    - name: Stop and disable auditd (best effort)
+      service:
+        name: auditd
+        state: stopped
+        enabled: no
+      ignore_errors: true
+
+    ############################################################
+    # 6) Reinstall insecure services: telnet, rsh, xinetd (if available)
+    ############################################################
+    - name: Reinstall insecure network packages
+      package:
+        name:
+          - telnet
+          - telnet-server
+          - rsh
+          - rsh-server
+          - xinetd
+        state: present
+      ignore_errors: true
+
+    - name: Ensure telnet/xinetd services are started (if present)
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - telnet.socket
+        - xinetd
+      ignore_errors: true
+
+    ############################################################
+    # 7) Make files world-writable (dangerous) - optional
+    ############################################################
+    - name: Find candidate files to set world-writable (avoid whitelist)
+      find:
+        paths: /
+        file_type: file
+        recurse: yes
+        size: 0b-100M
+        patterns: []
+        excludes: "{{ world_writable_whitelist | join(',') }}"
+        permissions: "!-------w-"   # not a perfect filter; will collect many files - be careful
+      register: find_files
+      failed_when: false
+      changed_when: false
+
+    - name: Apply world-writable bit to a limited set (dangerous) if enabled
+      when: apply_world_writable
+      block:
+        - name: Limit to first 200 files to avoid total chaos (adjust as needed)
+          set_fact:
+            vuln_files: "{{ find_files.files[0:200] | map(attribute='path') | list }}"
+
+        - name: Make selected files world-writable
+          file:
+            path: "{{ item }}"
+            mode: "0666"
+          loop: "{{ vuln_files }}"
+          ignore_errors: true
+
+  handlers:
+    - name: restart_sshd
+      service:
+        name: "{{ 'sshd' if ansible_facts.get('os_family','') != 'Debian' else 'ssh' }}"
+        state: restarted
+      ignore_errors: true
