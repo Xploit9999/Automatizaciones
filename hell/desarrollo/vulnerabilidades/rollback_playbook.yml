@@ -59,7 +59,8 @@
  
     - shell: |
         mysql -u root -pNuevo01 vulnerabilidades < {{ backup_file }}
-      when: backup_stat.stat.exists
       args:
         executable: /bin/bash
       changed_when: true
+      delegate_to: srv-testing
+      run_once: true      

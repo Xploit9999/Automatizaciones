@@ -13,6 +13,8 @@
       args:
         executable: /bin/bash
       changed_when: true
+      delegate_to: srv-testing
+      run_once: true
 
     - name: Create backup directory
       file:
