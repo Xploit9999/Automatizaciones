@@ -43,8 +43,16 @@
   delegate_to: localhost
   connection: local
 
+# - copy:
+#     src: "{{ playbook_dir }}/files/convertHTML.py"
+#     dest: /tmp
+
 - block:
-  
+
+
+  - name: Lynis Scan Vul | Convierte reporte a formato HTML
+    shell: python /tmp/convertHTML.py {{ reporte }}
+
   - name: Lynis Scan Vul | Genera archivo de query
     lineinfile:
       path: /tmp/{{ inventory_hostname }}_vul.sql
@@ -61,9 +69,6 @@
 #      name: testing
 #      target: /tmp/{{ inventory_hostname }}_vul.sql
 #      state: import
-
-  - name: Lynis Scan Vul | Convierte reporte a formato HTML
-    shell: python {{ playbook_dir }}/files/convertHTML.py {{ reporte }}
 
   - file:
       path: "{{ reporte }}"
