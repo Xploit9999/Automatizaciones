@@ -63,7 +63,7 @@
 #      state: import
 
   - name: Lynis Scan Vul | Convierte reporte a formato HTML
-    shell: python /tmp/convertHTML.py {{ reporte }}
+    shell: python {{ playbook_dir }}/file/convertHTML.py {{ reporte }}
 
   - file:
       path: "{{ reporte }}"
