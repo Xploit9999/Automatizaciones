@@ -6,7 +6,7 @@
     lynis_backup_dir: /var/backups/lynis_remediation_backup/{{ inventory_hostname }}
     backup_file: /tmp/vulnerabilidades_backup.sql
   tasks:
-    - name: Restore configuration backups
+    - name: Restaura archivos de configuracion
       copy:
         src: "{{ item }}"
         dest: "/etc/{{ item | basename | regex_replace('\\.bak$', '') }}"
@@ -19,7 +19,7 @@
         - "{{ lynis_backup_dir }}/chrony.conf.bak"
       ignore_errors: true
 
-    - name: Reinstall removed packages if recorded
+    - name: Reinstala paquetes que fueron removidos
       shell: |
         if [ -f "{{ lynis_backup_dir }}/removed_packages.txt" ]; then
           while read -r pkg; do
@@ -33,7 +33,7 @@
         executable: /bin/bash
       when: ansible_facts['pkg_mgr'] != 'apt'
 
-    - name: Re-apply world-writable bits (if file exists)
+    - name: Restaura permisos de archivos especiales
       shell: |
         if [ -f "{{ lynis_backup_dir }}/world_writable_files.txt" ]; then
           while read -r f; do
@@ -43,7 +43,7 @@
       args:
         executable: /bin/bash
 
-    - name: Restart critical services
+    - name: Reinicia servicios
       service:
         name: "{{ item }}"
         state: restarted
@@ -52,10 +52,6 @@
         - auditd
         - chronyd
       ignore_errors: true
-
-    - name: Report rollback summary
-      debug:
-        msg: "Rollback complete — verify SELinux, firewalld, and SSH manually."
  
     - shell: |
         mysql -u root -pNuevo01 vulnerabilidades --protocol=tcp < {{ backup_file }}

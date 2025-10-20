@@ -20,13 +20,13 @@
       run_once: true      
 
 
-    - name: Create backup dir
+    - name: Crea directorio backup
       file:
         path: "{{ lynis_backup_dir }}"
         state: directory
         mode: '0700'
 
-    - name: Backup important config files
+    - name: Backup archivos de configuracion
       copy:
         src: "{{ item }}"
         dest: "{{ lynis_backup_dir }}/{{ item | basename }}.bak"
@@ -40,8 +40,8 @@
       ignore_errors: true
 
   tasks:
-    # --- ejemplo de remediaciones "texto exacto" que OpenSCAP suele aceptar ---
-    - name: Ensure PermitRootLogin no in sshd_config
+
+    - name: Remueve acceso a root por ssh
       lineinfile:
         path: /etc/ssh/sshd_config
         regexp: '^#?PermitRootLogin'
@@ -50,7 +50,7 @@
         backup: yes
       notify: restart_sshd
 
-    - name: Ensure PasswordAuthentication no in sshd_config
+    - name: Remueve la autenticacion por contraseña
       lineinfile:
         path: /etc/ssh/sshd_config
         regexp: '^#?PasswordAuthentication'
@@ -59,7 +59,7 @@
         backup: yes
       notify: restart_sshd
 
-    - name: Ensure pwquality minlen (pwquality.conf)
+    - name: Parametriza la política de contraseña
       lineinfile:
         path: /etc/security/pwquality.conf
         regexp: '^minlen'
@@ -67,7 +67,7 @@
         create: yes
         backup: yes
 
-    - name: Ensure PASS_MIN_LEN in login.defs
+    - name: Parametriza la politica para el minimo de caracters de contraseña
       lineinfile:
         path: /etc/login.defs
         regexp: '^PASS_MIN_LEN'
@@ -75,7 +75,7 @@
         create: yes
         backup: yes
 
-    - name: Ensure chrony configured with pool servers (append if missing)
+    - name: Parametriza archivo chrony (NTP)
       blockinfile:
         path: /etc/chrony.conf
         marker: "# {mark} ANSIBLE MANAGED BLOCK - NTP servers"
@@ -84,7 +84,7 @@
           server 1.pool.ntp.org iburst
       notify: restart_chronyd
 
-    - name: Deploy basic audit rules for passwd/shadow/sudoers
+    - name: Hardeniza archivo de politica del sudoers
       copy:
         dest: /etc/audit/rules.d/hardening.rules
         content: |
@@ -93,12 +93,17 @@
           -w /etc/sudoers -p wa -k sudoers_changes
       notify: reload_auditd
 
-    - name: Remove world writable bit from files (recorded already by your other playbook)
+    - name: Asegura permisos en archivos especiales de sistema
       shell: |
         find / -xdev -type f -perm -0002 -not -path '/tmp/*' -not -path '/var/tmp/*' -print0 | xargs -0 -r chmod o-w || true
       args:
         executable: /bin/bash
 
+    - name: Openscap Scan | Ejecuta escaneo
+      shell: oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_cis --report /tmp/{{ inventory_hostname }}_oscap_report_.html --results /tmp/{{ inventory_hostname }}_oscap_report_{{ fecha_ejecucion }}.xml /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml >/dev/null 2>&1
+      register: resultado
+      failed_when: resultado.rc > 2
+      
     - mysql_query:
         login_user: "root"
         login_password: "Nuevo01"
