@@ -55,11 +55,11 @@
 
   - name: Lynis Scan Vul | Genera archivo de query
     lineinfile:
-      path: /tmp/{{ inventory_hostname }}_vul.sql
+      path: /tmp/queries/{{ inventory_hostname }}_vul.sql
       line: "{{ queries | join }}"
       create: true
 
-  - shell: mysql -u root -pNuevo01 -D vulnerabilidades --protocol=tcp < /tmp/{{ inventory_hostname }}_vul.sql
+  - shell: mysql -u root -pNuevo01 -D vulnerabilidades --protocol=tcp < /tmp/queries/{{ inventory_hostname }}_vul.sql
     ignore_errors: true
 
 #  - name: Lynis Scan Vul | Registra data a la base de datos.
