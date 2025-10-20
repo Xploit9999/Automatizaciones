@@ -23,12 +23,15 @@
   #- name: Lynis Scan Vul | Se limpian registros de la base de datos.
     mysql_query:
       login_user: root
-      login_password: 'Nuevo01'
+      login_password: Nuevo01
       login_db: vulnerabilidades
       query:
-        - DELETE FROM vulnerabilidades;
+        - DELETE FROM vulnerabilidades
       login_unix_socket: ""
 
   delegate_to: srv-testing
   run_once: true
+
+- pause:
+    minutes: 5
 ...
