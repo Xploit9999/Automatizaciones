@@ -49,11 +49,11 @@
 
   - name: Guardar query en un archivo SQL
     lineinfile:
-      path: /tmp/{{ inventory_hostname }}_vul.sql
+      path: /tmp/queries/{{ inventory_hostname }}_vul.sql
       line: "{{ queries | join }}"
       create: true
 
-  - shell: mysql -u root -pNuevo01 -D vulnerabilidades --protocol=tcp < /tmp/{{ inventory_hostname }}_vul.sql
+  - shell: mysql -u root -pNuevo01 -D vulnerabilidades --protocol=tcp < /tmp/queries/{{ inventory_hostname }}_vul.sql
     ignore_errors: true
 
   # - name: Registrar métricas en la base de datos
