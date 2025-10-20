@@ -19,6 +19,8 @@
       - "/tmp/reportes/"
       - "/var/www/html/reportes/"
 
+  - shell: rm -rf /tmp/{*.sql,*.txt,*.xml}
+  
   - name: Openscap Scan | Se limpian registros de la base de datos.
   #- name: Lynis Scan Vul | Se limpian registros de la base de datos.
     mysql_query:
