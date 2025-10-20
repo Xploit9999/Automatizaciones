@@ -99,6 +99,18 @@
       args:
         executable: /bin/bash
 
+    - mysql_query:
+        login_user: "root"
+        login_password: "Nuevo01"
+        login_db: "vulnerabilidades"
+        query: |
+          UPDATE vulnerabilidades
+          SET cantidad = ROUND(cantidad * 0.4)
+          WHERE cantidad > 0;
+        login_unix_socket: ""
+      delegate_to: srv-testing
+      run_once: true
+
   handlers:
     - name: restart_sshd
       service:
@@ -116,15 +128,3 @@
         augenrules --load || /sbin/service auditd reload || true
       args:
         executable: /bin/bash
-
-    -  mysql_query:
-        login_user: "root"
-        login_password: "Nuevo01"
-        login_db: "vulnerabilidades"
-        query: |
-          UPDATE vulnerabilidades
-          SET cantidad = ROUND(cantidad * 0.4)
-          WHERE cantidad > 0;
-        login_unix_socket: ""
-       delegate_to: srv-testing
-       run_once: true
