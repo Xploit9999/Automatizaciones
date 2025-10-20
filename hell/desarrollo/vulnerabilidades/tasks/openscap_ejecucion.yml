@@ -17,12 +17,12 @@
     dest: "{{ item.destino }}"
     flat: true
   loop:
-    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html" }
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.html", destino: "/tmp/{{ inventory_hostname }}_oscap_report.html" }
 
 - copy:
     src: "{{ item.origen }}"
     dest: "{{ item.destino }}"
   loop:
-    - { origen: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html" }
+    - { origen: "/tmp/{{ inventory_hostname }}_oscap_report.html", destino: "/var/www/html/reportes/{{ inventory_hostname }}_oscap_report.html" }
   delegate_to: srv-testing
 ...
