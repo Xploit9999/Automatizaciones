@@ -8,8 +8,15 @@
     oscap_profile: xccdf_org.ssgproject.content_profile_stig   # AJUSTA el perfil (ej: cis)
     oscap_results: /var/log/oscap/results-{{ inventory_hostname }}.xml
     oscap_report: /var/log/oscap/report-{{ inventory_hostname }}.html
+    backup_file: /tmp/vulnerabilidades_backup.sql
 
   pre_tasks:
+    - ansible.builtin.shell: |
+        mysqldump -u root -pNuevo01 vulnerabilidades vulnerabilidades > {{ backup_file }}
+      args:
+        executable: /bin/bash
+      changed_when: true
+
     - name: Create backup dir
       file:
         path: "{{ lynis_backup_dir }}"
