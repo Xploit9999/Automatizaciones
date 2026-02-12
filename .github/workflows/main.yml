@@ -5,7 +5,7 @@ on:
     branches: 
       - 'testing'
     paths: 
-      - './contenedores/**'
+      - 'contenedores/**'
 
 jobs:
   testing:
