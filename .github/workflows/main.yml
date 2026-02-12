@@ -2,7 +2,8 @@
 name: Test
 on:
   push:
-    branches: testing
+    branches: 
+      - 'testing'
     paths: 
       - './contenedores/**'
 
