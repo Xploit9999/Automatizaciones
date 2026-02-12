@@ -3,7 +3,8 @@ name: Test
 on:
   push:
     branches: testing
-    paths: './contenedores/**'
+    paths: 
+      - './contenedores/**'
 
 jobs:
   testing:
