@@ -3,6 +3,7 @@ name: Test
 on:
   push:
     branches: testing
+    paths: ./contenedores/**
 
 jobs:
   testing:
