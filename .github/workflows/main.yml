@@ -13,4 +13,5 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: ls -ltr contenedores/
+      - run: whereis pip || whereis pip3
 ...
