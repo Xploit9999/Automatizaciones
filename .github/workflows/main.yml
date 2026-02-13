@@ -7,7 +7,7 @@ on:
     paths: 
       - 'contenedores/**'
 
-default:
+defaults:
   run:
     shell: bash
     working-directory: contenedores
