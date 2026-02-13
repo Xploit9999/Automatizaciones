@@ -7,11 +7,16 @@ on:
     paths: 
       - 'contenedores/**'
 
+default:
+  run:
+    shell: bash
+    working-directory: contenedores
+
 jobs:
   testing:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - run: ls -ltr contenedores/
+      - run: ls -ltr 
       - run: whereis pip || whereis pip3
 ...
