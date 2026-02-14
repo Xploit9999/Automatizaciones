@@ -15,16 +15,18 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: hub
+      
     steps:
       - name: Clona repo
         uses: actions/checkout@v6
 
-      - run: echo ${{ vars.HUB_USUARIO-hub }}
+      - run: echo ${{ vars.HUB_USUARIO }}
       - name: log al hub
         uses: docker/login-action@v3
         with:
           registry: 23ba-181-133-72-18.ngrok-free.app 
-          username: ${{ vars.HUB_USUARIO-hub }}
-          password: ${{ secrets.HUB_PASS-hub }}
+          username: ${{ vars.HUB_USUARIO }}
+          password: ${{ secrets.HUB_PASS }}
 
 ...
