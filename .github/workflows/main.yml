@@ -6,8 +6,7 @@ on:
       - 'testing'
     paths: 
       - 'contenedores/**'
-env:
-  - hub
+
 defaults:
   run:
     shell: bash
@@ -20,7 +19,7 @@ jobs:
       - name: Clona repo
         uses: actions/checkout@v6
 
-      - run: echo ${{ vars.HUB_USUARIO }}
+      - run: echo ${{ vars.HUB_USUARIO-hub }}
       - name: log al hub
         uses: docker/login-action@v3
         with:
