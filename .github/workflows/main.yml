@@ -22,7 +22,8 @@ jobs:
       - name: log al hub
         uses: docker/login-action@v3
         with:
+          registry: 23ba-181-133-72-18.ngrok-free.app 
           username: ${{ vars.HUB_USUARIO }}
           password: ${{ secrets.HUB_PASS }}
-          registry: 23ba-181-133-72-18.ngrok-free.app 
+
 ...
