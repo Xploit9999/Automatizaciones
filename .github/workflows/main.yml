@@ -13,11 +13,16 @@ defaults:
     working-directory: contenedores
 
 jobs:
-  testing:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - run: ls -ltr 
-      - run: whereis pip || whereis pip3
-      - run: echo ${{ github.event }}
+      - name: Clona repo
+        uses: actions/checkout@v6
+
+      - name: log al hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.HUB_USUARIO }}
+          password: ${{ secrets.HUB_PASS }}
+          registry: 23ba-181-133-72-18.ngrok-free.app 
 ...
