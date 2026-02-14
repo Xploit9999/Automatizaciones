@@ -19,6 +19,7 @@ jobs:
       - name: Clona repo
         uses: actions/checkout@v6
 
+      - run: echo ${{ vars.HUB_USUARIO }}
       - name: log al hub
         uses: docker/login-action@v3
         with:
