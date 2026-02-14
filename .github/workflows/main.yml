@@ -6,7 +6,8 @@ on:
       - 'testing'
     paths: 
       - 'contenedores/**'
-
+env:
+  - hub
 defaults:
   run:
     shell: bash
