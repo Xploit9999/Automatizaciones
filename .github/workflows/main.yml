@@ -34,7 +34,7 @@ jobs:
           context: "{{defaultContext}}:contenedores/ee/context"
           push: false
           tags: yagami/ee-testing:v1 
-          file: context/Containerfile
+          file: Containerfile
 
       - name: log al hub
         uses: docker/login-action@v3
