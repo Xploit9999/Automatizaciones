@@ -69,7 +69,7 @@ jobs:
       - name: publica ee en AAP
         uses: fjogeleit/http-request-action@v1
         with:
-          url: '${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/'
+          url: 'https://${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/'
           method: 'POST'
           bearerToken: ${{ secrets.AAP_TOKEN }}
           customHeaders: '{"Content-Type": "application/json"}'
