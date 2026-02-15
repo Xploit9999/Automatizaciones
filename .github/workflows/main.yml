@@ -31,7 +31,7 @@ jobs:
       - name: build ee
         uses: docker/build-push-action@v6
         with:
-          context: . 
+          context: context
           push: true
           tags: yagami/ee-testing:v1 
 ...
