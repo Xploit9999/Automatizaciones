@@ -10,7 +10,7 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: contenedores
+    working-directory: contenedores/ee
 
 jobs:
   build:
@@ -21,7 +21,6 @@ jobs:
       - name: Clona repo
         uses: actions/checkout@v6
 
-      - run: echo ${{ vars.HUB_USUARIO }}
       - name: log al hub
         uses: docker/login-action@v3
         with:
@@ -29,4 +28,10 @@ jobs:
           username: ${{ vars.HUB_USUARIO }}
           password: ${{ secrets.HUB_PASS }}
 
+      - name: build ee
+        uses: docker/build-push-action@v6
+        with:
+          context: . 
+          push: true
+          tags: yagami/ee-testing:v1 
 ...
