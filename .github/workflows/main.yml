@@ -25,53 +25,54 @@ jobs:
       - name: Clona repo
         uses: actions/checkout@v6
 
-      - name: log a redhat
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REDHAT_REGISTRY }}
-          username: ${{ vars.REDHAT_USUARIO }}
-          password: ${{ secrets.REDHAT_PASS }}
-
-      - name: log al hub
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.AUTOMATIONHUB }} 
-          username: ${{ vars.HUB_USUARIO }}
-          password: ${{ secrets.HUB_PASS }}
-
-      - name: build ee
-        uses: docker/build-push-action@v6
-        with:
-          context: "{{defaultContext}}:contenedores/ee/context"
-          push: false
-          load: true
-          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:v1 
-          file: Containerfile
-          cache-from: type=gha 
-          cache-to: type=gha,mode=max
-
-      - name: push ee
-        uses: docker/build-push-action@v6
-        with:
-          context: "{{defaultContext}}:contenedores/ee/context"
-          file: Containerfile
-          push: true
-          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:v1 
-          cache-from: type=gha 
-          cache-to: type=gha,mode=max
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment: hub
-
-    steps:
-      - name: publica ee en AAP
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: 'https://${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/'
-          method: 'POST'
-          bearerToken: ${{ secrets.AAP_TOKEN }}
-          customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"name": "SIUU", "image": "ansibletest.co/yagami/ee-testing:v1", "organization": 2}'
+      - run: echo ${{ github }}
+        #      - name: log a redhat
+        #        uses: docker/login-action@v3
+        #        with:
+        #          registry: ${{ env.REDHAT_REGISTRY }}
+        #          username: ${{ vars.REDHAT_USUARIO }}
+        #          password: ${{ secrets.REDHAT_PASS }}
+        #
+        #      - name: log al hub
+        #        uses: docker/login-action@v3
+        #        with:
+        #          registry: ${{ env.AUTOMATIONHUB }} 
+        #          username: ${{ vars.HUB_USUARIO }}
+        #          password: ${{ secrets.HUB_PASS }}
+        #
+        #      - name: build ee
+        #        uses: docker/build-push-action@v6
+        #        with:
+        #          context: "{{defaultContext}}:contenedores/ee/context"
+        #          push: false
+        #          load: true
+        #          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:v1 
+        #          file: Containerfile
+        #          cache-from: type=gha 
+        #          cache-to: type=gha,mode=max
+        #
+        #      - name: push ee
+        #        uses: docker/build-push-action@v6
+        #        with:
+        #          context: "{{defaultContext}}:contenedores/ee/context"
+        #          file: Containerfile
+        #          push: true
+        #          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:v1 
+        #          cache-from: type=gha 
+        #          cache-to: type=gha,mode=max
+        #
+        #  deploy:
+        #    runs-on: ubuntu-latest
+        #    needs: build
+        #    environment: hub
+        #
+        #    steps:
+        #      - name: publica ee en AAP
+        #        uses: fjogeleit/http-request-action@v1
+        #        with:
+        #          url: 'https://${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/'
+        #          method: 'POST'
+        #          bearerToken: ${{ secrets.AAP_TOKEN }}
+        #          customHeaders: '{"Content-Type": "application/json"}'
+        #          data: '{"name": "SIUU", "image": "ansibletest.co/yagami/ee-testing:v1", "organization": 2}'
 ...
