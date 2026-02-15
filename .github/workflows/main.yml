@@ -21,6 +21,21 @@ jobs:
       - name: Clona repo
         uses: actions/checkout@v6
 
+      - name: log a redhat
+        uses: docker/login-action@v3
+        with:
+          registry: registry.redhat.io 
+          username: ${{ vars.REDHAT_USUARIO }}
+          password: ${{ secrets.REDHAT_PASS }}
+
+      - name: build ee
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:contenedores/ee"
+          push: false
+          tags: yagami/ee-testing:v1 
+          file: context/Containerfile
+
       - name: log al hub
         uses: docker/login-action@v3
         with:
@@ -28,13 +43,9 @@ jobs:
           username: ${{ vars.HUB_USUARIO }}
           password: ${{ secrets.HUB_PASS }}
 
-      - run: echo {{defaultContext}}
-
-      - name: build ee
+      - name: push ee
         uses: docker/build-push-action@v6
         with:
-          context: "{{defaultContext}}:contenedores/ee"
           push: true
           tags: yagami/ee-testing:v1 
-          file: context/Containerfile
 ...
