@@ -7,11 +7,11 @@ on:
     paths: 
       - 'contenedores/**'
 
-defaults:
-  run:
-    shell: bash
-    working-directory: contenedores/ee
-
+      #1defaults:
+      #1  run:
+      #1    shell: bash
+      #1    working-directory: contenedores/ee
+      #1
 env:
   REDHAT_REGISTRY: registry.redhat.io
   AUTOMATIONHUB: 23ba-181-133-72-18.ngrok-free.app
