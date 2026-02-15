@@ -33,7 +33,7 @@ jobs:
       - name: build ee
         uses: docker/build-push-action@v6
         with:
-          context: context
+          context: "{{defaultContext}}:contenedores/ee"
           push: true
           tags: yagami/ee-testing:v1 
           file: context/Containerfile
