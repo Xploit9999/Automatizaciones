@@ -17,15 +17,28 @@ env:
   AUTOMATIONHUB: 23ba-181-133-72-18.ngrok-free.app
 
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+
+    steps:
+      - id: tag
+        run: echo version=$(echo ${{ github.event.head_commit.message }} | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]') >> "$GITHUB_OUTPUT"
+
+      - if: ${{ !startswith(steps.tag.outputs.version, 'v') }}
+        run: exit 1
+
   build:
     runs-on: ubuntu-latest
+    needs: tag
     environment: hub
       
     steps:
       - name: Clona repo
         uses: actions/checkout@v6
 
-      - run: echo ${{ github.event.head_commit.message }}
+      - run: echo ${{ needs.tag.output.version }}
         #      - name: log a redhat
         #        uses: docker/login-action@v3
         #        with:
