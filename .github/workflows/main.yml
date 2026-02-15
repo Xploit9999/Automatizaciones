@@ -28,6 +28,8 @@ jobs:
           username: ${{ vars.HUB_USUARIO }}
           password: ${{ secrets.HUB_PASS }}
 
+      - run: ls -ltr
+
       - name: build ee
         uses: docker/build-push-action@v6
         with:
