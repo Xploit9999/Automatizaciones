@@ -50,6 +50,8 @@ jobs:
       - name: push ee
         uses: docker/build-push-action@v6
         with:
+          context: "{{defaultContext}}:contenedores/ee/context"
+          file: Containerfile
           push: true
           tags: 23ba-181-133-72-18.ngrok-free.app/yagami/ee-testing:v1 
 ...
