@@ -7,11 +7,6 @@ on:
     paths: 
       - 'contenedores/**'
 
-      #1defaults:
-      #1  run:
-      #1    shell: bash
-      #1    working-directory: contenedores/ee
-      #1
 env:
   REDHAT_REGISTRY: registry.redhat.io
   AUTOMATIONHUB: 23ba-181-133-72-18.ngrok-free.app
@@ -24,70 +19,75 @@ jobs:
 
     steps:
       - id: tag
+        name: Extrae version del tag del commit
         run: echo version=$(echo ${{ github.event.head_commit.message }} | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]') >> "$GITHUB_OUTPUT"
 
-      - if: ${{ !startswith(steps.tag.outputs.version, 'v') }}
+      - name: Falla si no hay versión encontrada
+        if: ${{ !startswith(steps.tag.outputs.version, 'v') }}
         run: exit 1
-      - if: ${{ startswith(steps.tag.outputs.version, 'v') }}
-        run: echo ${{ steps.tag.outputs.version }}
 
   build:
     runs-on: ubuntu-latest
     needs: tag
     environment: hub
-      
+    defaults:
+      run:
+        shell: bash
+        working-directory: contenedores/ee
+    env:
+      version: ${{ needs.tag.outputs.version }} 
+
     steps:
       - name: Clona repo
         uses: actions/checkout@v6
 
-      - run: echo ${{ needs.tag.outputs.version }}
-        #      - name: log a redhat
-        #        uses: docker/login-action@v3
-        #        with:
-        #          registry: ${{ env.REDHAT_REGISTRY }}
-        #          username: ${{ vars.REDHAT_USUARIO }}
-        #          password: ${{ secrets.REDHAT_PASS }}
-        #
-        #      - name: log al hub
-        #        uses: docker/login-action@v3
-        #        with:
-        #          registry: ${{ env.AUTOMATIONHUB }} 
-        #          username: ${{ vars.HUB_USUARIO }}
-        #          password: ${{ secrets.HUB_PASS }}
-        #
-        #      - name: build ee
-        #        uses: docker/build-push-action@v6
-        #        with:
-        #          context: "{{defaultContext}}:contenedores/ee/context"
-        #          push: false
-        #          load: true
-        #          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:v1 
-        #          file: Containerfile
-        #          cache-from: type=gha 
-        #          cache-to: type=gha,mode=max
-        #
-        #      - name: push ee
-        #        uses: docker/build-push-action@v6
-        #        with:
-        #          context: "{{defaultContext}}:contenedores/ee/context"
-        #          file: Containerfile
-        #          push: true
-        #          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:v1 
-        #          cache-from: type=gha 
-        #          cache-to: type=gha,mode=max
-        #
-        #  deploy:
-        #    runs-on: ubuntu-latest
-        #    needs: build
-        #    environment: hub
-        #
-        #    steps:
-        #      - name: publica ee en AAP
-        #        uses: fjogeleit/http-request-action@v1
-        #        with:
-        #          url: 'https://${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/'
-        #          method: 'POST'
-        #          bearerToken: ${{ secrets.AAP_TOKEN }}
-        #          customHeaders: '{"Content-Type": "application/json"}'
-        #          data: '{"name": "SIUU", "image": "ansibletest.co/yagami/ee-testing:v1", "organization": 2}'
+      - name: log a redhat
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REDHAT_REGISTRY }}
+          username: ${{ vars.REDHAT_USUARIO }}
+          password: ${{ secrets.REDHAT_PASS }}
+
+      - name: log al hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.AUTOMATIONHUB }} 
+          username: ${{ vars.HUB_USUARIO }}
+          password: ${{ secrets.HUB_PASS }}
+
+      - name: build ee
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:contenedores/ee/context"
+          push: false
+          load: true
+          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:${{ env.version }}
+          file: Containerfile
+          cache-from: type=gha 
+          cache-to: type=gha,mode=max
+
+      - name: push ee
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:contenedores/ee/context"
+          file: Containerfile
+          push: true
+          tags: ${{ env.AUTOMATIONHUB }}/yagami/ee-testing:${{ env.version }}
+          cache-from: type=gha 
+          cache-to: type=gha,mode=max
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: hub
+
+    steps:
+      - name: publica ee en AAP
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: 'https://${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/'
+          method: 'POST'
+          bearerToken: ${{ secrets.AAP_TOKEN }}
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: '{"name": "SIUU", "image": "ansibletest.co/yagami/ee-testing:${{ env.version }}", "organization": 2}'
 ...
