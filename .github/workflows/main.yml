@@ -19,13 +19,15 @@ jobs:
     steps:
 
       - name: publica ee en AAP
+        id: consulta
         uses: fjogeleit/http-request-action@v1
         with:
           url: 'https://${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/SIUU/'
           method: 'GET'
           bearerToken: ${{ secrets.AAP_TOKEN }}
           customHeaders: '{"Content-Type": "application/json"}'
- 
+      
+      - run: echo ${{ steps.consulta.outputs.status }}
           #  tag:
           #    runs-on: ubuntu-latest
           #    outputs:
