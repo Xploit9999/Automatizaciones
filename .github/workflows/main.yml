@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: hub
 
-     steps:
+    steps:
 
       - name: publica ee en AAP
         uses: fjogeleit/http-request-action@v1
@@ -25,7 +25,7 @@ jobs:
           method: 'GET'
           bearerToken: ${{ secrets.AAP_TOKEN }}
           customHeaders: '{"Content-Type": "application/json"}'
-   
+ 
           #  tag:
           #    runs-on: ubuntu-latest
           #    outputs:
