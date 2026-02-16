@@ -78,8 +78,10 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [tag, build]
     environment: hub
+    env:
+      version: ${{ needs.tag.outputs.version }} 
 
     steps:
       - name: publica ee en AAP
