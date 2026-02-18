@@ -105,7 +105,7 @@ jobs:
           data: '{"image": "ansibletest.co/yagami/ee-testing:${{ env.version }}"}'
 
       - name: publica ee en AAP
-        if: ${{ steps.consulta.outputs.status != '200' }}
+        if: ${{ steps.consulta.outputs.status == '404' }}
         uses: fjogeleit/http-request-action@v1
         with:
           url: 'https://${{ env.AUTOMATIONHUB }}/api/controller/v2/execution_environments/'
